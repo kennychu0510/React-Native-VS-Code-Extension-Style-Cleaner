@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { extractStyles } from "./helper";
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
@@ -21,10 +22,38 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         // Listen for messages from the Sidebar component and execute action
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.type) {
-                // case "onSomething: {
-                //     // code here...
-                //     break;
-                // }
+                case "onFetchText": {
+                    let editor = vscode.window.activeTextEditor;
+
+                    if (!editor) {
+                        vscode.window.showErrorMessage("No active text editor");
+                        return
+                    }
+
+                    let text = editor.document.getText(editor.selection)
+                    this._view?.webview.postMessage({
+                        type: "onSelectedText",
+                        value: text
+                    })
+                    break;
+                }
+                case "onFetchStyles": {
+                    let editor = vscode.window.activeTextEditor;
+                    if (!editor) {
+                        vscode.window.showErrorMessage("No active text editor");
+                        return
+                    }
+
+                    const text = editor.document.getText()
+                    const styles = extractStyles(text)
+                    this._view?.webview.postMessage({
+                        type: "onReceiveStyles",
+                        value: styles
+                    })
+                    
+
+                    break
+                }
                 case "onInfo": {
                     if (!data.value) {
                         return;
