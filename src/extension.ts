@@ -11,6 +11,10 @@ export function activate(context: vscode.ExtensionContext) {
   // 	// code here...
   // }));
 
+  context.subscriptions.push(vscode.commands.registerCommand('stylesCleaner.helloWorld', () => {
+  	vscode.window.showInformationMessage(`hello world from styles cleaner`);
+  }));
+
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor) {

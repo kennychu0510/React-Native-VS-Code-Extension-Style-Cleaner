@@ -71,17 +71,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   public getStyles() {
-    if (!this._editor || !this._view) return;
+    if (!this._editor || !this._view) {
+      return;
+    }
     const text = this._editor.document.getText();
     try {
-        const { styles, globalStyleName } = getStyles(text);
-        this._view.webview.postMessage({
-          type: 'onReceiveStyles',
-          value: JSON.stringify({ styles, globalStyleName }),
-        });
-    } catch (error) {
-        
-    }
+      const { styles, globalStyleName } = getStyles(text);
+      this._view.webview.postMessage({
+        type: 'onReceiveStyles',
+        value: JSON.stringify({ styles, globalStyleName }),
+      });
+    } catch (error) {}
   }
 
   public revive(panel: vscode.WebviewView) {
@@ -89,9 +89,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
+    //@ts-ignore
     const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'reset.css'));
+    //@ts-ignore
     const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'vscode.css'));
+    //@ts-ignore
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'out', 'compiled/sidebar.js'));
+    //@ts-ignore
     const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'out', 'compiled/sidebar.css'));
 
     // Use a nonce to only allow a specific script to be run.

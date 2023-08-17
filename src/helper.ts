@@ -4,10 +4,9 @@ import { CallExpression, Expression, File, Identifier, MemberExpression, ObjectE
 export function extractStyles(text: string) {
   const ast = parse(text, {
     sourceType: 'unambiguous',
-    plugins: ['jsx', 'classProperties', "typescript"],
+    plugins: ['jsx', 'classProperties', 'typescript'],
   });
   const { styleName, stylePropContainer } = getStyleName(ast);
-
 }
 
 function getStyleName(ast: File): { styleName: string; stylePropContainer: ObjectExpression | null } {
@@ -43,7 +42,7 @@ export function getStyles(text: string) {
     plugins: ['jsx', 'classProperties', 'typescript'],
   });
 
-  const styles: any = {}
+  const styles: any = {};
   let globalStyleName = '';
 
   ast.program.body.forEach((node) => {
@@ -57,14 +56,15 @@ export function getStyles(text: string) {
           if (obj?.name === 'StyleSheet' && property?.name === 'create') {
             const id = item.id as Identifier;
             globalStyleName = id.name;
+            //@ts-ignore
             init?.arguments[0].properties.forEach((item) => {
               const name = item.key.name;
               styles[name] = {
                 usage: 0,
                 details: {
-                  item
-                }
-              }
+                  item,
+                },
+              };
             });
           }
         }
@@ -78,7 +78,7 @@ export function getStyles(text: string) {
     const regex = new RegExp(styleToMatch, 'g');
     const matches = text.match(regex);
     const useCount = matches ? matches.length : 0;
-    styles[name].usage = useCount
+    styles[name].usage = useCount;
   }
 
   return {
