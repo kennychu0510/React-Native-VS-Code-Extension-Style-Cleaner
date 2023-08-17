@@ -7,12 +7,7 @@ export function extractStyles(text: string) {
     plugins: ['jsx', 'classProperties', "typescript"],
   });
   const { styleName, stylePropContainer } = getStyleName(ast);
-  const styles = stylePropContainer?.properties.filter(item => item.type === 'ObjectProperty').map((_item) => {
-    const item = _item as ObjectProperty
-    const key = item.key
-    
-    
-  })
+
 }
 
 function getStyleName(ast: File): { styleName: string; stylePropContainer: ObjectExpression | null } {
@@ -39,5 +34,55 @@ function getStyleName(ast: File): { styleName: string; stylePropContainer: Objec
   return {
     styleName,
     stylePropContainer,
+  };
+}
+
+export function getStyles(text: string) {
+  const ast = parse(text, {
+    sourceType: 'unambiguous',
+    plugins: ['jsx', 'classProperties', 'typescript'],
+  });
+
+  const styles: any = {}
+  let globalStyleName = '';
+
+  ast.program.body.forEach((node) => {
+    if (node.type === 'VariableDeclaration') {
+      node.declarations.forEach((item) => {
+        if (item.type === 'VariableDeclarator') {
+          const init = item.init as CallExpression;
+          const callee = init?.callee as MemberExpression;
+          const obj = callee?.object as Identifier;
+          const property = callee?.property as Identifier;
+          if (obj?.name === 'StyleSheet' && property?.name === 'create') {
+            const id = item.id as Identifier;
+            globalStyleName = id.name;
+            init?.arguments[0].properties.forEach((item) => {
+              const name = item.key.name;
+              styles[name] = {
+                usage: 0,
+                details: {
+                  item
+                }
+              }
+            });
+          }
+        }
+      });
+    }
+  });
+
+  for (let item in styles) {
+    const name = item;
+    const styleToMatch = `${globalStyleName}.${name}`;
+    const regex = new RegExp(styleToMatch, 'g');
+    const matches = text.match(regex);
+    const useCount = matches ? matches.length : 0;
+    styles[name].usage = useCount
+  }
+
+  return {
+    styles,
+    globalStyleName,
   };
 }
