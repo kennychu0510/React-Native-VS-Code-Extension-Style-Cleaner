@@ -52,6 +52,21 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           vscode.window.showInformationMessage(`${stylesToDelete.length} style${stylesToDelete.length > 1 ? 's' : ''} deleted successfully!`);
           break;
         }
+        case 'onClickStyle': {
+          const location = JSON.parse(data.value);
+          const start = new vscode.Position(location.start.line - 1, location.start.column);
+          const end = new vscode.Position(location.end.line, 0);
+          const range = new vscode.Range(start, end);
+          const selection = new vscode.Selection(range.start, range.end);
+          //@ts-ignore
+          this._editor?.selection = selection;
+          this._editor?.revealRange(range, vscode.TextEditorRevealType.InCenter);
+          this._editor?.edit((edit) => {
+            edit.insert(range.start, '');
+          });
+
+          break;
+        }
         case 'onInfo': {
           if (!data.value) {
             return;
@@ -76,12 +91,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
     const text = this._editor.document.getText();
     try {
-      const { styles, globalStyleName } = getStyles(text);
+      const { styles, globalStyleName, styleLocation } = getStyles(text);
+
       this._view.webview.postMessage({
         type: 'onReceiveStyles',
         value: JSON.stringify({ styles, globalStyleName }),
       });
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   public revive(panel: vscode.WebviewView) {

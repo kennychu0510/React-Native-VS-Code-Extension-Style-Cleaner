@@ -16,6 +16,10 @@
     styleList = styleList.filter((style: any) => style.usage !== 0)
   }
 
+  function goToLocation(style: any) {
+    tsvscode.postMessage({ type: 'onClickStyle', value: JSON.stringify({...style.details.item.loc})})
+  }
+
   onMount(() => {
     // Listen for messages from the extension
     fetchStyles();
@@ -58,7 +62,10 @@
   {#each styleList as style}
     <tr>
       <td style="text-align: left">
-        {style.name}
+        <a href="javascript:void(0);" on:click={() => goToLocation(style)}>
+          {style.name}
+
+        </a>
       </td>
       <td style="text-align: center">
         {style.usage}

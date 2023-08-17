@@ -11,44 +11,45 @@ export function getStyles(text: string) {
   const styles: any = {};
   let globalStyleName = '';
   let stylesType = 'normal';
+  let styleLocation = {}
 
-  ast.program.body.forEach((node) => {
-    if (node.type === 'VariableDeclaration') {
-      node.declarations.forEach((item) => {
-        if (item.type === 'VariableDeclarator') {
+  ast.program.body
+    .filter((node) => node.type === 'VariableDeclaration')
+    .forEach((node) => {
+      node.declarations
+        .filter((item) => item.type === 'VariableDeclarator')
+        .forEach((item) => {
           const init = item.init;
           const callee = init?.callee;
           const obj = callee?.object;
           const property = callee?.property;
-  
-          const id = item.id;
-          styleObjectLoc = id.loc;
-          globalStyleName = id.name;
-          let properties = null;
-  
-          if (init.type === 'CallExpression') {
-            if (obj?.name === 'StyleSheet' && property?.name === 'create') {
-              properties = init?.arguments[0].properties;
-            }
-          } else if (init.type === 'ArrowFunctionExpression') {
-            if (init.body.callee.object.name === 'StyleSheet') {
-              properties = init.body.arguments[0].properties;
-            }
+
+          if (init.type === 'CallExpression' && obj?.name === 'StyleSheet' && property?.name === 'create' && !globalStyleName) {
+            globalStyleName = item.id.name;
+
+            styleLocation = item.loc;
+            init?.arguments[0].properties.forEach((item) => {
+              const name = item.key.name;
+              styles[name] = {
+                usage: 0,
+                details: { item },
+              };
+            });
+          } else if (init.type === 'ArrowFunctionExpression' && init.body.callee?.object.name === 'StyleSheet' && !globalStyleName) {
+            globalStyleName = item.id.name ?? '';
             stylesType = 'arrow';
+            styleLocation = item.loc;
+
+            init.body.arguments[0].properties.forEach((item) => {
+              const name = item.key.name;
+              styles[name] = {
+                usage: 0,
+                details: { item },
+              };
+            });
           }
-          properties?.forEach((item) => {
-            const name = item.key.name;
-            styles[name] = {
-              usage: 0,
-              details: {
-                item,
-              },
-            };
-          });
-        }
-      });
-    }
-  });
+        });
+    });
 
   for (let item in styles) {
     const name = item;
@@ -65,5 +66,6 @@ export function getStyles(text: string) {
   return {
     styles,
     globalStyleName,
+    styleLocation
   };
 }
