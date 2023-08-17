@@ -1,41 +1,6 @@
 import { parse } from '@babel/parser';
 import { CallExpression, Expression, File, Identifier, MemberExpression, ObjectExpression, ObjectProperty, PrivateName } from '@babel/types';
 
-export function extractStyles(text: string) {
-  const ast = parse(text, {
-    sourceType: 'unambiguous',
-    plugins: ['jsx', 'classProperties', 'typescript'],
-  });
-  const { styleName, stylePropContainer } = getStyleName(ast);
-}
-
-function getStyleName(ast: File): { styleName: string; stylePropContainer: ObjectExpression | null } {
-  let styleName = '';
-  let stylePropContainer: ObjectExpression | null = null;
-  ast.program.body.forEach((item) => {
-    if (item.type === 'VariableDeclaration') {
-      item?.declarations?.forEach((dec) => {
-        if (dec.type === 'VariableDeclarator') {
-          const init = dec.init as CallExpression;
-          const callee = init?.callee as MemberExpression;
-          const obj = callee?.object as Identifier;
-          const property = callee?.property as Identifier;
-          if (obj?.name === 'StyleSheet' && property?.name === 'create') {
-            const id = dec.id as Identifier;
-            styleName = id?.name;
-            const args = init?.arguments as [ObjectExpression];
-            stylePropContainer = args?.[0];
-          }
-        }
-      });
-    }
-  });
-  return {
-    styleName,
-    stylePropContainer,
-  };
-}
-
 export function getStyles(text: string) {
   const ast = parse(text, {
     sourceType: 'unambiguous',
@@ -44,6 +9,7 @@ export function getStyles(text: string) {
 
   const styles: any = {};
   let globalStyleName = '';
+  let stylesType = 'normal';
 
   ast.program.body.forEach((node) => {
     if (node.type === 'VariableDeclaration') {
@@ -53,19 +19,38 @@ export function getStyles(text: string) {
           const callee = init?.callee as MemberExpression;
           const obj = callee?.object as Identifier;
           const property = callee?.property as Identifier;
-          if (obj?.name === 'StyleSheet' && property?.name === 'create') {
-            const id = item.id as Identifier;
-            globalStyleName = id.name;
+          if (init.type === 'CallExpression') {
+            if (obj?.name === 'StyleSheet' && property?.name === 'create') {
+              const id = item.id as Identifier;
+              globalStyleName = id.name;
+              //@ts-ignore
+              init?.arguments[0].properties.forEach((item) => {
+                const name = item.key.name;
+                styles[name] = {
+                  usage: 0,
+                  details: {
+                    item,
+                  },
+                };
+              });
+            }
+          } else if (init.type === 'ArrowFunctionExpression') {
             //@ts-ignore
-            init?.arguments[0].properties.forEach((item) => {
-              const name = item.key.name;
-              styles[name] = {
-                usage: 0,
-                details: {
-                  item,
-                },
-              };
-            });
+            if (init.body.callee.object.name === 'StyleSheet') {
+              //@ts-ignore
+              init.body.arguments[0].properties.forEach((item) => {
+                const name = item.key.name;
+                styles[name] = {
+                  usage: 0,
+                  details: {
+                    item,
+                  },
+                };
+              });
+              //@ts-ignore
+              globalStyleName = item.id.name ?? '';
+              stylesType = 'arrow';
+            }
           }
         }
       });
@@ -74,7 +59,10 @@ export function getStyles(text: string) {
 
   for (let item in styles) {
     const name = item;
-    const styleToMatch = `${globalStyleName}.${name}`;
+    let styleToMatch = `${globalStyleName}.${name}`;
+    if (stylesType === 'arrow') {
+      styleToMatch = `${globalStyleName}(.+).${name}`;
+    }
     const regex = new RegExp(styleToMatch, 'g');
     const matches = text.match(regex);
     const useCount = matches ? matches.length : 0;
