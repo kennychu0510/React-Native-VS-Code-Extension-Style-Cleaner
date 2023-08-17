@@ -97,6 +97,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         type: 'onReceiveStyles',
         value: JSON.stringify({ styles, globalStyleName }),
       });
+      const stylesCount = Object.keys(styles).length;
+      vscode.window.showInformationMessage(`Found ${stylesCount} style${stylesCount > 1 ? 's' : ''}!`);
     } catch (error) {
       console.log(error);
     }
@@ -138,7 +140,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
 			</head>
             <body>
-				<script nonce="${nonce}" src="${scriptUri}"></script>
+				<script nonce="${nonce}" src="${scriptUri}"></link>
 			</body>
 			</html>`;
   }
