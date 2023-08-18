@@ -6,7 +6,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   _doc?: vscode.TextDocument;
   _editor?: vscode.TextEditor;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly _extensionUri: vscode.Uri) {
+    this._editor = vscode.window.activeTextEditor
+  }
 
   public resolveWebviewView(webviewView: vscode.WebviewView) {
     this._view = webviewView;
@@ -65,6 +67,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             edit.insert(range.start, '');
           });
 
+          break;
+        }
+        case 'copyStylesFromSelection': {
+          if (!this._editor || !this._editor.selection) {
+            break
+          }
+          console.log(this._editor.document.getText(this._editor.selection))
           break;
         }
         case 'onInfo': {

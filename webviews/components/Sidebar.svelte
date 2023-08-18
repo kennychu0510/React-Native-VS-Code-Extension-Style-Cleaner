@@ -46,10 +46,12 @@
     tsvscode.postMessage({ type: 'onClickStyle', value: JSON.stringify({ ...style.details.item.loc }) });
   }
 
+  function copyStylesInSelection() {
+    tsvscode.postMessage({ type: 'copyStylesFromSelection', value: '' });
+  }
+
   onMount(() => {
     // Listen for messages from the extension
-    fetchStyles();
-
     window.addEventListener('message', (event) => {
       const message = event.data;
       switch (message.type) {
@@ -60,6 +62,8 @@
         }
       }
     });
+
+    fetchStyles();
   });
 </script>
 
@@ -131,6 +135,7 @@
 {:else}
   <p>No Styles Detected</p>
 {/if}
+<button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
 
 <style>
   .headerContainer {
@@ -147,6 +152,6 @@
   }
 
   .unused {
-    color: rgb(235, 23, 58)
+    color: rgb(235, 23, 58);
   }
 </style>

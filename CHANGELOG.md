@@ -1,5 +1,8 @@
 # Change Log
 
+## [0.0.7] - 2023-08-18
+- Fix extension not fetching styles on first mount
+
 ## [0.0.6] - 2023-08-18
 - Rename extension name from "Styles Cleaner" to "RN Styles Cleaner" 
 ## [0.0.5] - 2023-08-18
