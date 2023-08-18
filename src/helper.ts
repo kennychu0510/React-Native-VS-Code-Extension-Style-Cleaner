@@ -72,9 +72,9 @@ export function getStyles(text: string): StyleDetail[] {
           }
         });
     });
-    
+
   for (let i = 0; i < styleList.length; i++) {
-    const styleObj = styleList[i]
+    const styleObj = styleList[i];
     for (let item in styleObj.styles) {
       const name = item;
       let styleToMatch = `${styleObj.rootName}.${name}`;
@@ -89,4 +89,58 @@ export function getStyles(text: string): StyleDetail[] {
   }
 
   return styleList;
+}
+
+type ParsedStyle = {
+  rootName: string;
+  styles: {
+    name: string;
+    usage: number;
+    details: any;
+  }[];
+  location: any;
+  styleType: 'normal' | 'arrow';
+};
+export function parseStyleFromArrayToList(stylesRaw): ParsedStyle[] {
+  const styleList: any = [];
+  for (let i = 0; i < stylesRaw.length; i++) {
+    const styleDetail: any = [];
+    // console.log(stylesRaw[i])
+    for (let style in stylesRaw[i].styles) {
+      styleDetail.push({
+        name: style,
+        ...stylesRaw[i].styles[style],
+      });
+    }
+    styleList.push({
+      ...stylesRaw[i],
+      styles: styleDetail,
+    });
+  }
+  return styleList;
+}
+
+export function findStylesUsed(styleList, text) {
+  const stylesUsed = [];
+  for (let i = 0; i < styleList.length; i++) {
+    const styleObj = styleList[i];
+    for (let j = 0; j < styleObj.styles.length; j++) {
+      const item = styleObj.styles[j]
+      const name = item.name;
+      let styleToMatch = `${styleObj.rootName}.${name}`;
+      if (styleObj.styleType === 'arrow') {
+        styleToMatch = `${styleObj.rootName}(.+).${name}`;
+      }
+      const regex = new RegExp(styleToMatch, 'g');
+      const matches = text.match(regex);
+      const isUsed = matches;
+      if (isUsed) {
+        stylesUsed.push({
+          name: name,
+          loc: styleList[i].styles[j].details.item.loc,
+        });
+      }
+    }
+  }
+  return stylesUsed;
 }

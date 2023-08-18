@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
-import { getStyles } from './helper';
+import { findStylesUsed, getStyles, parseStyleFromArrayToList } from './helper';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
   _doc?: vscode.TextDocument;
   _editor?: vscode.TextEditor;
+  styleList: any;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     this._editor = vscode.window.activeTextEditor
@@ -73,7 +74,24 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           if (!this._editor || !this._editor.selection) {
             break
           }
-          console.log(this._editor.document.getText(this._editor.selection))
+          const selection = this._editor.document.getText(this._editor.selection)
+          const stylesUsed = findStylesUsed(this.styleList, selection)
+          let stylesToCopy = ''
+          const ranges = []
+          for (let style of stylesUsed) {
+            // vscode.env.clipboard.writeText()
+            const start = new vscode.Position(style.loc.start.line - 1, style.loc.start.column);
+            const end = new vscode.Position(style.loc.end.line, 0);
+            const range = new vscode.Range(start, end);
+            // stylesToCopy += this._editor.
+            ranges.push(range)
+            // this._editor.revealRange(range, vscode.TextEditorRevealType.Default)
+          }
+          this._editor.selections = ranges.map(range => new vscode.Selection(range.start, range.end))
+          const selectedText = this._editor.selections.map(selection => this._editor?.document.getText(selection)).join('');
+          vscode.env.clipboard.writeText(selectedText).then(() => {
+            vscode.window.showInformationMessage('Copied styles to clipboard!');
+          });
           break;
         }
         case 'onInfo': {
@@ -94,6 +112,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
   }
 
+  public getTextFromSelection() {
+    return this._editor?.document.getText(this._editor.selection) ?? ''
+  }
+
   public getStyles() {
     if (!this._editor || !this._view) {
       return;
@@ -102,21 +124,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     try {
       const stylesRaw = getStyles(text);
 
-      const styleList: any = [];
-      for (let i = 0; i < stylesRaw.length; i++) {
-        const styleDetail: any = [];
-        // console.log(stylesRaw[i])
-        for (let style in stylesRaw[i].styles) {
-          styleDetail.push({
-            name: style,
-            ...stylesRaw[i].styles[style],
-          });
-        }
-        styleList.push({
-          ...stylesRaw[i],
-          styles: styleDetail,
-        });
-      }
+      const styleList = parseStyleFromArrayToList(stylesRaw)
+      this.styleList = styleList
 
       this._view.webview.postMessage({
         type: 'onReceiveStyles',

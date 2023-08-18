@@ -132,10 +132,10 @@
   {#if unusedStyles.length > 0}
     <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
   {/if}
+  <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
 {:else}
   <p>No Styles Detected</p>
 {/if}
-<!-- <button on:click={copyStylesInSelection}>Copy Styles in Selection</button> -->
 
 <style>
   .headerContainer {
