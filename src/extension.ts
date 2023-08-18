@@ -11,9 +11,11 @@ export function activate(context: vscode.ExtensionContext) {
   // 	// code here...
   // }));
 
-  context.subscriptions.push(vscode.commands.registerCommand('stylesCleaner.helloWorld', () => {
-  	vscode.window.showInformationMessage(`hello world from styles cleaner`);
-  }));
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand('stylesCleaner.helloWorld', () => {
+  //     vscode.window.showInformationMessage(`hello world from styles cleaner`);
+  //   })
+  // );
 
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
@@ -21,6 +23,12 @@ export function activate(context: vscode.ExtensionContext) {
         sidebarProvider._editor = editor;
         sidebarProvider.getStyles();
       }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument((event) => {
+      sidebarProvider.getStyles();
     })
   );
 }

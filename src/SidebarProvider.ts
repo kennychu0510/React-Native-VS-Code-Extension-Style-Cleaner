@@ -91,16 +91,40 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
     const text = this._editor.document.getText();
     try {
-      const { styles, globalStyleName, styleLocation } = getStyles(text);
+      const stylesRaw = getStyles(text);
+
+      const styleList: any = [];
+      for (let i = 0; i < stylesRaw.length; i++) {
+        const styleDetail: any = [];
+        // console.log(stylesRaw[i])
+        for (let style in stylesRaw[i].styles) {
+          styleDetail.push({
+            name: style,
+            ...stylesRaw[i].styles[style],
+          });
+        }
+        styleList.push({
+          ...stylesRaw[i],
+          styles: styleDetail,
+        });
+      }
 
       this._view.webview.postMessage({
         type: 'onReceiveStyles',
-        value: JSON.stringify({ styles, globalStyleName }),
+        value: JSON.stringify(styleList),
       });
-      const stylesCount = Object.keys(styles).length;
-      vscode.window.showInformationMessage(`Found ${stylesCount} style${stylesCount > 1 ? 's' : ''}!`);
+
+      let stylesCount = 0
+      for (let style of stylesRaw) {
+        stylesCount += Object.keys(style.styles).length
+      }
+      // vscode.window.showInformationMessage(`Found ${stylesCount} style${stylesCount > 1 ? 's' : ''}!`);
     } catch (error) {
       console.log(error);
+      this._view.webview.postMessage({
+        type: 'onReceiveStyles',
+        value: JSON.stringify([]),
+      });
     }
   }
 
