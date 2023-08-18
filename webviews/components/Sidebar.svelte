@@ -135,7 +135,7 @@
 {:else}
   <p>No Styles Detected</p>
 {/if}
-<button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
+<!-- <button on:click={copyStylesInSelection}>Copy Styles in Selection</button> -->
 
 <style>
   .headerContainer {
