@@ -4,15 +4,15 @@ import { SidebarProvider } from './SidebarProvider';
 export function activate(context: vscode.ExtensionContext) {
   // Register the Sidebar Panel
   const sidebarProvider = new SidebarProvider(context.extensionUri);
-  context.subscriptions.push(vscode.window.registerWebviewViewProvider('stylesCleaner-sidebar', sidebarProvider));
+  context.subscriptions.push(vscode.window.registerWebviewViewProvider('RNStylesCleaner-sidebar', sidebarProvider));
 
   // Register a custom command
-  // context.subscriptions.push(vscode.commands.registerCommand('stylesCleaner.commandname', () => {
+  // context.subscriptions.push(vscode.commands.registerCommand('RNStylesCleaner.commandname', () => {
   // 	// code here...
   // }));
 
   // context.subscriptions.push(
-  //   vscode.commands.registerCommand('stylesCleaner.helloWorld', () => {
+  //   vscode.commands.registerCommand('RNStylesCleaner.helloWorld', () => {
   //     vscode.window.showInformationMessage(`hello world from styles cleaner`);
   //   })
   // );

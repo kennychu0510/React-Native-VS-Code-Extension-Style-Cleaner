@@ -1,5 +1,7 @@
 # Change Log
 
+## [0.0.6] - 2023-08-18
+- Rename extension name from "Styles Cleaner" to "RN Styles Cleaner" 
 ## [0.0.5] - 2023-08-18
 - Added support for multiple styles created in the same file
 - Added highlight for unused style
