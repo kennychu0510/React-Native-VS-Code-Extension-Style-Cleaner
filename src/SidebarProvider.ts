@@ -76,6 +76,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           }
           const selection = this._editor.document.getText(this._editor.selection)
           const stylesUsed = findStylesUsed(this.styleList, selection)
+          if (stylesUsed.length === 0) {
+            vscode.window.showErrorMessage('No styles within selection!');
+            break;
+          }
           let stylesToCopy = ''
           const ranges = []
           for (let style of stylesUsed) {
@@ -89,6 +93,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           }
           this._editor.selections = ranges.map(range => new vscode.Selection(range.start, range.end))
           const selectedText = this._editor.selections.map(selection => this._editor?.document.getText(selection)).join('');
+          
           vscode.env.clipboard.writeText(selectedText).then(() => {
             vscode.window.showInformationMessage('Copied styles to clipboard!');
           });

@@ -10,16 +10,6 @@ const Component = () => {
   )
 }
 
-const componentStyle = StyleSheet.create({
-  componentContainer: {
-    flex: 1,
-    backgroundColor: 'red'
-  },
-  text: {
-    color: 'black',
-    fontWeight: 'bold'
-  }
-})
 
 const file4 = () => {
   return (
@@ -31,6 +21,18 @@ const file4 = () => {
 }
 
 export default file4
+
+
+const componentStyle = StyleSheet.create({
+  componentContainer: {
+    flex: 1,
+    backgroundColor: 'red'
+  },
+  text: {
+    color: 'black',
+    fontWeight: 'bold'
+  }
+})
 
 const styles = (WIDTH) => StyleSheet.create({
   container: {

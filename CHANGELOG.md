@@ -1,5 +1,8 @@
 # Change Log
 
+## [0.0.9] - 2023-08-19
+- Added copy style from selection feature
+
 ## [0.0.8] - 2023-08-18
 - Remove incomplete button
 
