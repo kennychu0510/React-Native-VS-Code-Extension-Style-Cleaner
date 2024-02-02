@@ -15,6 +15,12 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.workspace.onDidSaveTextDocument((event) => {
       sidebarProvider.getStyles();
+    }),
+    vscode.window.onDidChangeTextEditorSelection(event => {
+      if (event.textEditor && vscode.window.activeTextEditor && event.textEditor.document === vscode.window.activeTextEditor.document) {
+        const selection = sidebarProvider.getTextFromSelection()
+        sidebarProvider.setSelection(selection)
+      }
     })
   ]
   subscriptions.forEach(item => context.subscriptions.push(item))

@@ -6,9 +6,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   _doc?: vscode.TextDocument;
   _editor?: vscode.TextEditor;
   styleList: any;
+  selection: string;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     this._editor = vscode.window.activeTextEditor
+    this.selection = ''
   }
 
   public resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -113,13 +115,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           vscode.window.showErrorMessage(data.value);
           break;
         }
-        case 'testing': {
-          if (!this._editor || !this._editor.selection) return
-          const selection = this._editor.document.getText(this._editor.selection)
-          console.log(selection)
-          break;
-        }
       }
+    });
+  }
+
+  public setSelection(selection: string) {
+    this.selection = selection
+    this._view?.webview.postMessage({
+      type: 'onReceiveSelection',
+      value: selection,
     });
   }
 

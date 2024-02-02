@@ -9,6 +9,7 @@
   };
 
   let styleList: StyleDetail[] = [];
+  $: selection = '';
   $: unusedStyles = getUnusedStyles(styleList);
 
   function getUnusedStyles(styleList: StyleDetail[]) {
@@ -62,6 +63,10 @@
         case 'onReceiveStyles': {
           const result = JSON.parse(message.value);
           styleList = result;
+          break;
+        }
+        case 'onReceiveSelection': {
+          selection = message.value;
           break;
         }
       }
@@ -139,8 +144,9 @@
   {#if unusedStyles.length > 0}
     <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
   {/if}
-  <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
-  <button on:click={testing}>Testing button</button>
+  {#if selection}
+    <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
+  {/if}
 {:else}
   <p>No Styles Detected</p>
 {/if}
