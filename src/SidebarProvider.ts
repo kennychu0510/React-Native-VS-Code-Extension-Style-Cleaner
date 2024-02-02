@@ -113,6 +113,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           vscode.window.showErrorMessage(data.value);
           break;
         }
+        case 'testing': {
+          if (!this._editor || !this._editor.selection) return
+          const selection = this._editor.document.getText(this._editor.selection)
+          console.log(selection)
+          break;
+        }
       }
     });
   }

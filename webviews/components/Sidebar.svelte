@@ -50,6 +50,10 @@
     tsvscode.postMessage({ type: 'copyStylesFromSelection', value: '' });
   }
 
+  function testing() {
+    tsvscode.postMessage({ type: 'testing', value: '' });
+  }
+
   onMount(() => {
     // Listen for messages from the extension
     window.addEventListener('message', (event) => {
@@ -70,6 +74,7 @@
 {#if styleList.length > 0}
   <div class="headerContainer">
     <h1>Styles Cleaner</h1>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="refresh" on:click={fetchStyles}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -112,10 +117,12 @@
         <tr>
           <td style="text-align: left">
             {#if style.usage === 0}
+              <!-- svelte-ignore a11y-invalid-attribute -->
               <a href="" class="unused" on:click={() => goToLocation(style)}>
                 {style.name}
               </a>
             {:else}
+              <!-- svelte-ignore a11y-invalid-attribute -->
               <a href="" on:click={() => goToLocation(style)}>
                 {style.name}
               </a>
@@ -133,6 +140,7 @@
     <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
   {/if}
   <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
+  <button on:click={testing}>Testing button</button>
 {:else}
   <p>No Styles Detected</p>
 {/if}
