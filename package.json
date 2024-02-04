@@ -39,7 +39,12 @@
         }
       ]
     },
-    "commands": []
+    "commands": [
+      {
+        "command": "RNStylesCleaner.extractSelectionIntoStyleSheet",
+        "title": "RN Styles Cleaner: Extract Selection into Style sheet"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -48,9 +53,8 @@
     "package": "webpack --mode production --devtool hidden-source-map",
     "test-compile": "tsc -p ./",
     "test-watch": "tsc -watch -p ./",
-    "pretest": "npm run test-compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "npx vitest"
+    "test": "vscode-test"
   },
   "dependencies": {
     "@babel/parser": "^7.22.10",
@@ -69,6 +73,8 @@
     "@types/vscode": "^1.60.0",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.9",
     "concurrently": "^6.2.1",
     "eslint": "^7.27.0",
     "glob": "^7.1.7",
@@ -83,6 +89,7 @@
     "typescript": "^4.3.2",
     "vitest": "^0.34.2",
     "vscode": "*",
+    "vscode-extension-tester": "^7.0.0",
     "vscode-test": "^1.5.2",
     "webpack": "^5.38.1",
     "webpack-cli": "^4.7.0"

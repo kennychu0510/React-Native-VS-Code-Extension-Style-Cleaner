@@ -1,11 +1,12 @@
 //@ts-nocheck
 
 import { parse } from '@babel/parser';
+import { SourceLocation } from '@babel/types';
 
 type StyleDetail = {
   rootName: string;
   styles: any;
-  location: any;
+  location: SourceLocation;
   styleType: 'normal' | 'arrow';
 };
 export function getStyles(text: string): StyleDetail[] {
@@ -98,7 +99,7 @@ type ParsedStyle = {
     usage: number;
     details: any;
   }[];
-  location: any;
+  location: SourceLocation;
   styleType: 'normal' | 'arrow';
 };
 export function parseStyleFromArrayToList(stylesRaw): ParsedStyle[] {
@@ -125,7 +126,7 @@ export function findStylesUsed(styleList, text) {
   for (let i = 0; i < styleList.length; i++) {
     const styleObj = styleList[i];
     for (let j = 0; j < styleObj.styles.length; j++) {
-      const item = styleObj.styles[j]
+      const item = styleObj.styles[j];
       const name = item.name;
       let styleToMatch = `${styleObj.rootName}.${name}`;
       if (styleObj.styleType === 'arrow') {
@@ -143,4 +144,55 @@ export function findStylesUsed(styleList, text) {
     }
   }
   return stylesUsed;
+}
+
+export function checkSelectionIsValidStyle(selection: string): boolean {
+  
+  if (!selection.startsWith('style={{')) {
+    return false;
+  }
+  if (!selection.endsWith('}}')) {
+    return false;
+  }
+  const trimmed = selection.replace(/\s/g, '');
+  const styleContents = trimmed.slice('style={{'.length, -2);
+  const keyValuePairs = styleContents.split(',');
+  if (keyValuePairs.length === 0) {
+    return false
+  }
+
+  const isAllValidStyles = keyValuePairs.every(pair => {
+    const [key, value] = pair.split(':', 2);
+    if (!key || !value) {
+      return false;
+    }
+    return true;
+  })
+  if (!isAllValidStyles) {
+    return false
+  }
+
+  return true;
+}
+
+export function getStyleContents(style: string): string[] {
+  const trimmed = style.replace(/\s/g, '');
+  const styleContents = trimmed.slice('style={{'.length, -2);
+  const keyValuePairs = styleContents.split(',').filter(item => !!item).map(item => item.replace(/:/, ": "));
+  return keyValuePairs;
+}
+
+export function formatStyleForPasting(styles: string, styleName: string): string {
+  const styleContents = getStyleContents(styles);
+  const formatted = styleContents.map(item => {
+    return `    ${item}`;
+  });
+  return "  " + styleName + ": {\n" + formatted.join(',\n') + ",\n  },\n";
+}
+
+export function isValidObjectKey(str) {
+  if (typeof str !== 'string' || str === '' || str.startsWith('_') || /^\d/.test(str) || str.includes(' ')) {
+    return false;
+  }
+  return true;
 }

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { findStylesUsed, getStyles, parseStyleFromArrayToList } from './helper';
+import { checkSelectionIsValidStyle, findStylesUsed, formatStyleForPasting, getStyles, isValidObjectKey, parseStyleFromArrayToList } from './helper';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
@@ -7,10 +7,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   _editor?: vscode.TextEditor;
   styleList: any;
   selection: string;
+  allStyles: ReturnType<typeof parseStyleFromArrayToList> = [];
 
   constructor(private readonly _extensionUri: vscode.Uri) {
-    this._editor = vscode.window.activeTextEditor
-    this.selection = ''
+    this._editor = vscode.window.activeTextEditor;
+    this.selection = '';
   }
 
   public resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -74,28 +75,24 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         }
         case 'copyStylesFromSelection': {
           if (!this._editor || !this._editor.selection) {
-            break
+            break;
           }
-          const selection = this._editor.document.getText(this._editor.selection)
-          const stylesUsed = findStylesUsed(this.styleList, selection)
+          const selection = this._editor.document.getText(this._editor.selection);
+          const stylesUsed = findStylesUsed(this.styleList, selection);
           if (stylesUsed.length === 0) {
             vscode.window.showErrorMessage('No styles within selection!');
             break;
           }
-          let stylesToCopy = ''
-          const ranges = []
+          const ranges = [];
           for (let style of stylesUsed) {
-            // vscode.env.clipboard.writeText()
             const start = new vscode.Position(style.loc.start.line - 1, style.loc.start.column);
             const end = new vscode.Position(style.loc.end.line, 0);
             const range = new vscode.Range(start, end);
-            // stylesToCopy += this._editor.
-            ranges.push(range)
-            // this._editor.revealRange(range, vscode.TextEditorRevealType.Default)
+            ranges.push(range);
           }
-          this._editor.selections = ranges.map(range => new vscode.Selection(range.start, range.end))
-          const selectedText = this._editor.selections.map(selection => this._editor?.document.getText(selection)).join('');
-          
+          this._editor.selections = ranges.map((range) => new vscode.Selection(range.start, range.end));
+          const selectedText = this._editor.selections.map((selection) => this._editor?.document.getText(selection)).join('');
+
           vscode.env.clipboard.writeText(selectedText).then(() => {
             vscode.window.showInformationMessage('Copied styles to clipboard!');
           });
@@ -115,20 +112,51 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           vscode.window.showErrorMessage(data.value);
           break;
         }
+        case 'extractStyleIntoStylesheet':
+          this.handleExtractSelectionIntoStyleSheet();
+          break;
+        case 'testing': {
+          const style = this.allStyles[0];
+          if (!style) return;
+          const start = new vscode.Position(style.location.start.line - 1, 0);
+          const end = new vscode.Position(style.location.end.line - 1, style.location.end.column);
+          const range = new vscode.Range(start, end);
+          const editor = this._editor;
+          if (!editor) return
+
+          console.log('Editor:', this._editor);
+          console.log('Range:', range);
+          console.log('Text:', vscode.window.activeTextEditor?.document.getText(range));
+        }
       }
     });
   }
 
+  private getLocationOfEndOfStyleObject(objectName: string): number | null {
+    const style = this.allStyles.find((style) => style.rootName === objectName);
+    if (!style) {
+      return null;
+    }
+    return style.location.end.line;
+  }
+
+  private getLocationOfStyleSheetObject(style: ReturnType<typeof parseStyleFromArrayToList>[0]): number {
+    return style.location.end.line;
+  }
+
   public setSelection(selection: string) {
-    this.selection = selection
+    this.selection = selection;
     this._view?.webview.postMessage({
       type: 'onReceiveSelection',
-      value: selection,
+      value: JSON.stringify({
+        selection: selection,
+        isValidStyle: checkSelectionIsValidStyle(selection),
+      }),
     });
   }
 
   public getTextFromSelection() {
-    return this._editor?.document.getText(this._editor.selection) ?? ''
+    return this._editor?.document.getText(this._editor.selection) ?? '';
   }
 
   public getStyles() {
@@ -139,18 +167,21 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     try {
       const stylesRaw = getStyles(text);
 
-      const styleList = parseStyleFromArrayToList(stylesRaw)
-      this.styleList = styleList
+      const styleList = parseStyleFromArrayToList(stylesRaw);
+      this.styleList = styleList;
 
       this._view.webview.postMessage({
         type: 'onReceiveStyles',
         value: JSON.stringify(styleList),
       });
 
-      let stylesCount = 0
-      for (let style of stylesRaw) {
-        stylesCount += Object.keys(style.styles).length
-      }
+      this.allStyles = styleList;
+
+      // let stylesCount = 0
+      // for (let style of stylesRaw) {
+      //   stylesCount += Object.keys(style.styles).length
+      // }
+
       // vscode.window.showInformationMessage(`Found ${stylesCount} style${stylesCount > 1 ? 's' : ''}!`);
     } catch (error) {
       console.log(error);
@@ -158,6 +189,94 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         type: 'onReceiveStyles',
         value: JSON.stringify([]),
       });
+    }
+  }
+
+  public async handleExtractSelectionIntoStyleSheet(newStyleName?: string) {
+    if (!this._editor) {
+      vscode.window.showErrorMessage('No active text editor found');
+      return;
+    }
+
+    try {
+      if (!newStyleName) {
+        newStyleName = await vscode.window.showInputBox({
+          title: 'Enter style name',
+          placeHolder: 'styleName',
+        });
+      }
+
+      if (!newStyleName) return;
+
+      if (!isValidObjectKey(newStyleName)) {
+        vscode.window.showErrorMessage('Invalid style name');
+        return;
+      }
+
+      const selection = this._editor.selection;
+
+      if (this.allStyles.length > 1) {
+        // FIXME:
+        // vs code prompt for selection
+        const options = this.allStyles.map((style) => style.rootName);
+        vscode.window.showQuickPick(options).then((selectedStyle) => {
+          if (selectedStyle) {
+            const location = this.getLocationOfEndOfStyleObject(selectedStyle);
+            if (location) {
+              const start = new vscode.Position(location - 1, 0);
+              const end = new vscode.Position(location - 1, 0);
+              const range = new vscode.Range(start, end);
+              this._editor?.edit((edit) => {
+                edit.insert(range.start, formatStyleForPasting(this.selection, newStyleName!));
+                edit.delete(selection);
+                edit.insert(selection.start, `style={${selectedStyle}.${newStyleName}}`);
+                vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+              });
+            } else {
+              throw new Error('Could not find location to insert style for ' + selectedStyle);
+            }
+          }
+        });
+      } else if (this.allStyles.length === 1) {
+        const rootStyleName = this.allStyles[0].rootName;
+        const rootStyle = this.allStyles[0];
+        const isStyleSheetCreateSingleLine = rootStyle.location.start.line === rootStyle.location.end.line;
+        const lineContent = this._editor.document.lineAt(rootStyle.location.start.line - 1).text;
+
+        const endLineForExistingStyle = this.getLocationOfStyleSheetObject(rootStyle);
+        this._editor?.edit((edit) => {
+          if (isStyleSheetCreateSingleLine) {
+            const insertColumn = lineContent.lastIndexOf('})');
+            console.log({insertColumn})
+            edit.insert(new vscode.Position(endLineForExistingStyle, insertColumn), formatStyleForPasting(this.selection, newStyleName!));
+          } else {
+            edit.insert(new vscode.Position(endLineForExistingStyle - 1, 0), formatStyleForPasting(this.selection, newStyleName!));
+          }
+          edit.delete(selection);
+          edit.insert(selection.start, `style={${rootStyleName}.${newStyleName}}`);
+          vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+        });
+      } else {
+        // FIXME:
+        // get line count in editor
+        const lineCount = this._editor?.document.lineCount;
+        if (lineCount) {
+          const start = new vscode.Position(lineCount, 0);
+          const end = new vscode.Position(lineCount, 0);
+          const range = new vscode.Range(start, end);
+          this._editor?.edit((edit) => {
+            edit.insert(range.start, `\nconst styles = StyleSheet.create({\n` + formatStyleForPasting(this.selection, newStyleName!) + `});`);
+            edit.delete(selection);
+            edit.insert(selection.start, `style={styles.${newStyleName}}`);
+            vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+          });
+        } else {
+          throw new Error('Could not find location to insert style');
+        }
+      }
+    } catch (error) {
+      vscode.window.showErrorMessage('Failed to extract style into stylesheet');
+      console.error(error);
     }
   }
 
