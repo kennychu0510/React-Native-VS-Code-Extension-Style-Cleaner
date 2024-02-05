@@ -211,6 +211,17 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
+  test('Extract styles - Scenario 8: No active editor', async () => {
+    showErrorMessageSpy.resetHistory();
+    // close all editor windows
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+
+    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet');
+
+    assert.strictEqual(showErrorMessageSpy.calledOnce, true);
+    
+  });
+
   /* Styles Cleaning */
 
   test('Remove Unused Styles - Scenario 1: Clean unused style when there is 1 root style', async () => {
@@ -346,6 +357,17 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
+  test('Extract styles - Scenario 6: No active editor', async () => {
+    showErrorMessageSpy.resetHistory();
+    // close all editor windows
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+
+    await vscode.commands.executeCommand('RNStylesCleaner.removeUnusedStyles');
+
+    assert.strictEqual(showErrorMessageSpy.calledOnce, true);
+    
+  });
+
   /* Copy styles from selection */
 
   test('Copy Styles From Selection - Scenario 1: When no styles are selected', async () => {
@@ -379,6 +401,7 @@ suite('RN Styles Cleaner', () => {
 
   test('Copy Styles From Selection - Scenario 2: When there is no active editor', async () => {
     showErrorMessageSpy.resetHistory();
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
 
     await vscode.commands.executeCommand('RNStylesCleaner.copyStylesFromSelection');
 
