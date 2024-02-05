@@ -37,6 +37,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('RNStylesCleaner.removeUnusedStyles', () => {
       sidebarProvider.handleRemoveUnusedStyles();
     }),
+    vscode.commands.registerCommand('RNStylesCleaner.copyStylesFromSelection', () => {
+      sidebarProvider.handleCopyStylesFromSelection();
+    }),
   ];
   subscriptions.forEach((item) => context.subscriptions.push(item));
 }

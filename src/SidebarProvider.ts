@@ -55,28 +55,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           break;
         }
         case 'copyStylesFromSelection': {
-          if (!this._editor || !this._editor.selection) {
-            break;
-          }
-          const selection = this._editor.document.getText(this._editor.selection);
-          const stylesUsed = findStylesUsed(this.styleList, selection);
-          if (stylesUsed.length === 0) {
-            vscode.window.showErrorMessage('No styles within selection!');
-            break;
-          }
-          const ranges = [];
-          for (let style of stylesUsed) {
-            const start = new vscode.Position(style.loc!.start.line - 1, style.loc!.start.column);
-            const end = new vscode.Position(style.loc!.end.line, 0);
-            const range = new vscode.Range(start, end);
-            ranges.push(range);
-          }
-          this._editor.selections = ranges.map((range) => new vscode.Selection(range.start, range.end));
-          const selectedText = this._editor.selections.map((selection) => this._editor?.document.getText(selection)).join('');
-
-          vscode.env.clipboard.writeText(selectedText).then(() => {
-            vscode.window.showInformationMessage('Copied styles to clipboard!');
-          });
+          this.handleCopyStylesFromSelection();
           break;
         }
         case 'onInfo': {
@@ -173,8 +152,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       const selection = this._editor.selection;
 
       if (this.styleList.length > 1) {
-        // FIXME:
-        // vs code prompt for selection
         const options = this.styleList.map((style) => style.rootName);
         let selectedRootStyleName = rootStyleName;
         if (!selectedRootStyleName) {
@@ -285,6 +262,38 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       }
       edit.delete(selection);
       edit.insert(selection.start, `style={${rootStyleName}.${newStyleName}}`);
+    });
+  }
+
+  public async handleCopyStylesFromSelection() {
+    if (!this._editor || !this._editor.selection) {
+      vscode.window.showErrorMessage('No active text editor found');
+      return
+    }
+    
+    const selectedText = this._editor.document.getText(this._editor.selection);
+    if (!selectedText) {
+      vscode.window.showErrorMessage('No selection found');
+      return
+    }
+
+    const stylesUsed = findStylesUsed(this.styleList, selectedText);
+    if (stylesUsed.length === 0) {
+      vscode.window.showErrorMessage('No styles within selection!');
+      return
+    }
+    const ranges = [];
+    for (let style of stylesUsed) {
+      const start = new vscode.Position(style.loc!.start.line - 1, style.loc!.start.column);
+      const end = new vscode.Position(style.loc!.end.line, 0);
+      const range = new vscode.Range(start, end);
+      ranges.push(range);
+    }
+    this._editor.selections = ranges.map((range) => new vscode.Selection(range.start, range.end));
+    const newSelectedText = this._editor.selections.map((selection) => this._editor?.document.getText(selection)).join('');
+
+    vscode.env.clipboard.writeText(newSelectedText).then(() => {
+      vscode.window.showInformationMessage('Copied styles to clipboard!');
     });
   }
 

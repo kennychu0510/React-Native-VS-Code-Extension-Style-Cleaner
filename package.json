@@ -47,6 +47,10 @@
       {
         "command": "RNStylesCleaner.removeUnusedStyles",
         "title": "RN Styles Cleaner: Remove unused styles"
+      },
+      {
+        "command": "RNStylesCleaner.copyStylesFromSelection",
+        "title": "RN Styles Cleaner: Copy styles from selection"
       }
     ]
   },
