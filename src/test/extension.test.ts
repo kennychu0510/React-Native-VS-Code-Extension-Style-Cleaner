@@ -8,6 +8,8 @@ import * as mocha from 'mocha'
 suite('RN Styles Cleaner', () => {
   const showErrorMessageSpy = sinon.spy(vscode.window, 'showErrorMessage');
 
+  /* Styles Extraction */
+
   test('Extract styles - Scenario 1: Stylesheet contains at least one item', async () => {
     const scenario = 'one-style';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
@@ -73,7 +75,6 @@ suite('RN Styles Cleaner', () => {
   });
 
   test('Extract styles - Scenario 4: Selected style is multi-line', async () => {
-    showErrorMessageSpy.resetHistory();
     const scenario = 'multi-line-selection';
 
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
@@ -107,7 +108,7 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Extract styles - Scenario 4: Selection is invalid style', async () => {
+  test('Extract styles - Scenario 5: Selection is invalid style', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'invalid-style';
 
@@ -140,6 +141,42 @@ suite('RN Styles Cleaner', () => {
     // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
+
+  test('Extract styles - Scenario 6: More than 1 root style ', async () => {
+    const scenario = 'extract-multiple-root-styles';
+
+    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
+    const filePath = path.join(workspaceFolder, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'after.js'), 'utf8');
+
+    // create new file for testing
+    fs.writeFileSync(filePath, beforeFile, 'utf8');
+
+    // Open the file in the file explorer
+    const uri = vscode.Uri.file(filePath);
+    await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(document);
+
+    // select line 7 col 13 to line 7 col 41
+    const selection = new vscode.Selection(6, 12, 6, 40);
+    vscode.window.activeTextEditor!.selection = selection;
+
+    await sleep();
+
+    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', 'text', 'stylesB');
+
+    await vscode.commands.executeCommand('workbench.action.files.save');
+
+    // get content of current file
+    const currentFile = fs.readFileSync(filePath, 'utf8');
+
+    // assert beforeFile not equal after file
+    assert.strictEqual(currentFile, afterFile);
+  });
+
+  /* Styles Cleaning */
 
   test('Remove Unused Styles - Scenario 1: Clean unused style when there is 1 root style', async () => {
     const scenario = 'clean-style-1';

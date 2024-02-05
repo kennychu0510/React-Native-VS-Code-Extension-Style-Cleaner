@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { checkSelectionIsValidStyle, findStylesUsed, formatStyleForPasting, getStyles, isValidObjectKey, parseStyleFromArrayToList } from './helper';
 import * as _ from 'lodash';
+import { ParsedStyle } from './model';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
@@ -97,19 +98,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           break;
         case 'testing': {
           const selection = this._editor?.document.getText(this._editor.selection) ?? '';
-          console.log({selection})
-          console.log({isValid: checkSelectionIsValidStyle(selection)});
+          console.log({ selection });
+          console.log({ isValid: checkSelectionIsValidStyle(selection) });
         }
       }
     });
-  }
-
-  private getLocationOfEndOfStyleObject(objectName: string): number | null {
-    const style = this.styleList.find((style) => style.rootName === objectName);
-    if (!style) {
-      return null;
-    }
-    return style.location.end.line;
   }
 
   private getLocationOfStyleSheetObject(style: ReturnType<typeof parseStyleFromArrayToList>[0]): number {
@@ -156,7 +149,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  public async handleExtractSelectionIntoStyleSheet(newStyleName?: string, rootStyle = '') {
+  public async handleExtractSelectionIntoStyleSheet(newStyleName?: string, rootStyleName = '') {
     if (!this._editor) {
       vscode.window.showErrorMessage('No active text editor found');
       return;
@@ -183,45 +176,35 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         // FIXME:
         // vs code prompt for selection
         const options = this.styleList.map((style) => style.rootName);
-        let selectedRootStyle = rootStyle;
+        let selectedRootStyleName = rootStyleName;
+        if (!selectedRootStyleName) {
+          selectedRootStyleName = (await vscode.window.showQuickPick(options)) ?? '';
+        }
+        if (!selectedRootStyleName) return;
+
+        const selectedRootStyle = this.styleList.find((style) => style.rootName === selectedRootStyleName);
         if (!selectedRootStyle) {
-          selectedRootStyle = (await vscode.window.showQuickPick(options)) ?? '';
+          vscode.window.showErrorMessage('Invalid style selected');
+          return;
         }
-        if (!selectedRootStyle) return;
 
-        const location = this.getLocationOfEndOfStyleObject(selectedRootStyle);
-        if (location) {
-          const start = new vscode.Position(location - 1, 0);
-          const end = new vscode.Position(location - 1, 0);
-          const range = new vscode.Range(start, end);
-          this._editor?.edit((edit) => {
-            edit.insert(range.start, formatStyleForPasting(this.selection, newStyleName!));
-            edit.delete(selection);
-            edit.insert(selection.start, `style={${selectedRootStyle}.${newStyleName}}`);
-            vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
-          });
-        } else {
-          throw new Error('Could not find location to insert style for ' + selectedRootStyle);
-        }
-      } else if (this.styleList.length === 1) {
-        const rootStyleName = this.styleList[0].rootName;
-        const rootStyle = this.styleList[0];
-        const isStyleSheetCreateSingleLine = rootStyle.location.start.line === rootStyle.location.end.line;
-        const lineContent = this._editor.document.lineAt(rootStyle.location.start.line - 1).text;
-
-        const endLineForExistingStyle = this.getLocationOfStyleSheetObject(rootStyle);
-        this._editor?.edit((edit) => {
-          if (isStyleSheetCreateSingleLine) {
-            const insertColumn = lineContent.lastIndexOf('})');
-            console.log({ insertColumn });
-            edit.insert(new vscode.Position(endLineForExistingStyle, insertColumn), formatStyleForPasting(this.selection, newStyleName!));
-          } else {
-            edit.insert(new vscode.Position(endLineForExistingStyle - 1, 0), formatStyleForPasting(this.selection, newStyleName!));
-          }
-          edit.delete(selection);
-          edit.insert(selection.start, `style={${rootStyleName}.${newStyleName}}`);
-          vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+        await this.handleExtractStylesIntoStylesheet({
+          editor: this._editor!,
+          selection,
+          newStyleName,
+          rootStyleName: selectedRootStyleName,
+          rootStyle: selectedRootStyle,
         });
+        vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+      } else if (this.styleList.length === 1) {
+        await this.handleExtractStylesIntoStylesheet({
+          editor: this._editor!,
+          selection,
+          newStyleName,
+          rootStyleName: this.styleList[0].rootName,
+          rootStyle: this.styleList[0],
+        });
+        vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
       } else {
         // get line count in editor
         const lineCount = this._editor?.document.lineCount;
@@ -273,6 +256,35 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     this._view?.webview.postMessage({
       type: 'removeUnusedStylesSuccess',
       value: '',
+    });
+  }
+
+  private async handleExtractStylesIntoStylesheet({
+    editor,
+    selection,
+    newStyleName,
+    rootStyle,
+    rootStyleName,
+  }: {
+    editor: vscode.TextEditor;
+    selection: vscode.Selection;
+    newStyleName: string;
+    rootStyleName: string;
+    rootStyle: ParsedStyle;
+  }) {
+    const isStyleSheetCreateSingleLine = rootStyle.location.start.line === rootStyle.location.end.line;
+    const lineContent = editor.document.lineAt(rootStyle.location.start.line - 1).text;
+    const endLineForExistingStyle = this.getLocationOfStyleSheetObject(rootStyle);
+    editor.edit((edit) => {
+      if (isStyleSheetCreateSingleLine) {
+        const insertColumn = lineContent.lastIndexOf('})');
+        console.log({ insertColumn });
+        edit.insert(new vscode.Position(endLineForExistingStyle, insertColumn), formatStyleForPasting(this.selection, newStyleName));
+      } else {
+        edit.insert(new vscode.Position(endLineForExistingStyle - 1, 0), formatStyleForPasting(this.selection, newStyleName));
+      }
+      edit.delete(selection);
+      edit.insert(selection.start, `style={${rootStyleName}.${newStyleName}}`);
     });
   }
 

@@ -1,14 +1,10 @@
 import { parse } from '@babel/parser';
 import { SourceLocation, ObjectProperty } from '@babel/types';
 import * as _ from 'lodash';
+import { ParsedStyle, StyleDetail } from './model';
 
 
-type StyleDetail = {
-  rootName: string;
-  styles: any;
-  location: SourceLocation;
-  styleType: 'normal' | 'arrow';
-};
+
 export function getStyles(text: string): StyleDetail[] {
   const ast = parse(text, {
     sourceType: 'unambiguous',
@@ -92,18 +88,7 @@ export function getStyles(text: string): StyleDetail[] {
   return styleList;
 }
 
-type ItemDetail = NonNullable<ObjectProperty>
 
-type ParsedStyle = {
-  rootName: string;
-  styles: {
-    name: string;
-    usage: number;
-    details: { item: ItemDetail };
-  }[];
-  location: SourceLocation;
-  styleType: 'normal' | 'arrow';
-};
 export function parseStyleFromArrayToList(stylesRaw: StyleDetail[]): ParsedStyle[] {
   const styleList: any = [];
   for (let i = 0; i < stylesRaw.length; i++) {

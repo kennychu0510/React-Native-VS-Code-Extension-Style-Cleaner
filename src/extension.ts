@@ -23,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
         sidebarProvider.setSelection(selection);
       }
     }),
-    vscode.commands.registerCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', (arg1) => {
+    vscode.commands.registerCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', (newStyleName = '', rootStyle = '') => {
       if (sidebarProvider._editor?.selection.isEmpty) {
         vscode.window.showErrorMessage('No text selected');
         return;
@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage('Invalid style selected');
         return;
       }
-      sidebarProvider.handleExtractSelectionIntoStyleSheet(arg1);
+      sidebarProvider.handleExtractSelectionIntoStyleSheet(newStyleName, rootStyle);
     }),
     vscode.commands.registerCommand('RNStylesCleaner.removeUnusedStyles', () => {
       sidebarProvider.handleRemoveUnusedStyles();
