@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 // import * as myExtension from '../extension';
 
 suite('Extract style into stylesheet', () => {
-  test('Stylesheet contains at least one item', async () => {
+  test('Scenario 1: Stylesheet contains at least one item', async () => {
     // Get the current workspace directory
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, 'oneStyle.js');
@@ -40,7 +40,7 @@ suite('Extract style into stylesheet', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Stylesheet contains at least one item', async () => {
+  test('Scenario 2: No stylesheet', async () => {
     // Get the current workspace directory
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, 'noStyle.js');

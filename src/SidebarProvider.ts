@@ -257,7 +257,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
         });
       } else {
-        // FIXME:
         // get line count in editor
         const lineCount = this._editor?.document.lineCount;
         if (lineCount) {
@@ -265,7 +264,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           const end = new vscode.Position(lineCount, 0);
           const range = new vscode.Range(start, end);
           this._editor?.edit((edit) => {
-            edit.insert(range.start, `\nconst styles = StyleSheet.create({\n` + formatStyleForPasting(this.selection, newStyleName!) + `});`);
+            edit.insert(range.start, `\n\nconst styles = StyleSheet.create({\n` + formatStyleForPasting(this.selection, newStyleName!) + `});`);
             edit.delete(selection);
             edit.insert(selection.start, `style={styles.${newStyleName}}`);
             vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
