@@ -1,9 +1,13 @@
 import { expect, test, describe } from 'vitest';
-import { findStylesUsed, getStyles, parseStyleFromArrayToList } from '../src/helper';
+import { checkSelectionIsValidStyle, findStylesUsed, getStyles, parseStyleFromArrayToList } from '../src/helper';
 import fs from 'fs';
+import path from 'path'
+
+const __dirname = path.resolve();
+const folderDirectory = path.join(__dirname, 'unit-tests');
 
 describe('For all styles used file', () => {
-  const text = fs.readFileSync('./test/file1.js', {
+  const text = fs.readFileSync(path.join(folderDirectory, 'file1.js'), {
     encoding: 'utf-8',
   });
   const result = getStyles(text)[0];
@@ -22,7 +26,7 @@ describe('For all styles used file', () => {
 });
 
 describe('For no styles used file', () => {
-  const text = fs.readFileSync('./test/file2.js', {
+  const text = fs.readFileSync(path.join(folderDirectory, 'file2.js'), {
     encoding: 'utf-8',
   });
   const result = getStyles(text)[0];
@@ -34,7 +38,7 @@ describe('For no styles used file', () => {
 });
 
 describe('For stylesheet created as arrow function', () => {
-  const text = fs.readFileSync('./test/file3.js', {
+  const text = fs.readFileSync(path.join(folderDirectory, 'file3.js'), {
     encoding: 'utf-8',
   });
   const result = getStyles(text)[0];
@@ -53,7 +57,7 @@ describe('For stylesheet created as arrow function', () => {
 });
 
 describe('For multiple styles in component', () => {
-  const text = fs.readFileSync('./test/file4.js', {
+  const text = fs.readFileSync(path.join(folderDirectory, 'file4.js'), {
     encoding: 'utf-8',
   });
   const result = getStyles(text);
@@ -79,7 +83,7 @@ describe('For multiple styles in component', () => {
 });
 
 describe('transform style from object to array', () => {
-  const text = fs.readFileSync('./test/file1.js', {
+  const text = fs.readFileSync(path.join(folderDirectory, 'file1.js'), {
     encoding: 'utf-8',
   });
   const result = getStyles(text);
@@ -92,7 +96,7 @@ describe('transform style from object to array', () => {
 });
 
 describe('check styles used in text', () => {
-  const text = fs.readFileSync('./test/file1.js', {
+  const text = fs.readFileSync(path.join(folderDirectory, 'file1.js'), {
     encoding: 'utf-8',
   });
   const result = getStyles(text);
@@ -101,12 +105,35 @@ describe('check styles used in text', () => {
   <View style={styles.container}>
       <Text style={styles.text}>file1</Text>
     </View>
-  `
-  const stylesUsed = findStylesUsed(styleList, selection)
-  const containerStyleIsUsed = stylesUsed.find(item => item.name === 'container')
-  const textStyleIsUsed = stylesUsed.find(item => item.name === 'text')
+  `;
+  const stylesUsed = findStylesUsed(styleList, selection);
+  const containerStyleIsUsed = stylesUsed.find((item) => item.name === 'container');
+  const textStyleIsUsed = stylesUsed.find((item) => item.name === 'text');
   test('transform style object to array correctly', () => {
-   expect(containerStyleIsUsed).toBeDefined()
-   expect(textStyleIsUsed).toBeDefined()
+    expect(containerStyleIsUsed).toBeDefined();
+    expect(textStyleIsUsed).toBeDefined();
+  });
+});
+
+describe('checkSelectionIsValidStyle', () => {
+  test('multi-line style is valid', () => {
+    const selection = `style={{
+      flex: 1,
+      backgroundColor: 'red',
+    }}`;
+    const isValidStyle = checkSelectionIsValidStyle(selection);
+    expect(isValidStyle).toBe(true);
+  });
+
+  test('single line style is valid', () => {
+    const selection = `style={{ flex: 1, backgroundColor: 'red'}}`;
+    const isValidStyle = checkSelectionIsValidStyle(selection);
+    expect(isValidStyle).toBe(true);
+  });
+
+  test('single line style invalid style', () => {
+    const selection = `style={{ flex: , backgroundColor: }}`;
+    const isValidStyle = checkSelectionIsValidStyle(selection);
+    expect(isValidStyle).toBe(false);
   });
 });

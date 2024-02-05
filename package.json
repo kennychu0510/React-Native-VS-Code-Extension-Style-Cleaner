@@ -58,7 +58,8 @@
     "test-compile": "tsc -p ./",
     "test-watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "unit-test": "npx vitest"
   },
   "dependencies": {
     "@babel/parser": "^7.22.10",

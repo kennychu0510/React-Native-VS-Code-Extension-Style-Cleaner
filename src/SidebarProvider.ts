@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { checkSelectionIsValidStyle, findStylesUsed, formatStyleForPasting, getStyles, isValidObjectKey, parseStyleFromArrayToList } from './helper';
-import * as _ from 'lodash'
+import * as _ from 'lodash';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
@@ -65,8 +65,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           }
           const ranges = [];
           for (let style of stylesUsed) {
-            const start = new vscode.Position(style.loc.start.line - 1, style.loc.start.column);
-            const end = new vscode.Position(style.loc.end.line, 0);
+            const start = new vscode.Position(style.loc!.start.line - 1, style.loc!.start.column);
+            const end = new vscode.Position(style.loc!.end.line, 0);
             const range = new vscode.Range(start, end);
             ranges.push(range);
           }
@@ -96,8 +96,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           this.handleExtractSelectionIntoStyleSheet();
           break;
         case 'testing': {
-          console.log(this.styleList)
-
+          const selection = this._editor?.document.getText(this._editor.selection) ?? '';
+          console.log({selection})
+          console.log({isValid: checkSelectionIsValidStyle(selection)});
         }
       }
     });
@@ -146,7 +147,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       });
 
       this.styleList = styleList;
-
     } catch (error) {
       console.log(error);
       this._view.webview.postMessage({
@@ -156,7 +156,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  public async handleExtractSelectionIntoStyleSheet(newStyleName?: string) {
+  public async handleExtractSelectionIntoStyleSheet(newStyleName?: string, rootStyle = '') {
     if (!this._editor) {
       vscode.window.showErrorMessage('No active text editor found');
       return;
@@ -183,24 +183,26 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         // FIXME:
         // vs code prompt for selection
         const options = this.styleList.map((style) => style.rootName);
-        vscode.window.showQuickPick(options).then((selectedStyle) => {
-          if (selectedStyle) {
-            const location = this.getLocationOfEndOfStyleObject(selectedStyle);
-            if (location) {
-              const start = new vscode.Position(location - 1, 0);
-              const end = new vscode.Position(location - 1, 0);
-              const range = new vscode.Range(start, end);
-              this._editor?.edit((edit) => {
-                edit.insert(range.start, formatStyleForPasting(this.selection, newStyleName!));
-                edit.delete(selection);
-                edit.insert(selection.start, `style={${selectedStyle}.${newStyleName}}`);
-                vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
-              });
-            } else {
-              throw new Error('Could not find location to insert style for ' + selectedStyle);
-            }
-          }
-        });
+        let selectedRootStyle = rootStyle;
+        if (!selectedRootStyle) {
+          selectedRootStyle = (await vscode.window.showQuickPick(options)) ?? '';
+        }
+        if (!selectedRootStyle) return;
+
+        const location = this.getLocationOfEndOfStyleObject(selectedRootStyle);
+        if (location) {
+          const start = new vscode.Position(location - 1, 0);
+          const end = new vscode.Position(location - 1, 0);
+          const range = new vscode.Range(start, end);
+          this._editor?.edit((edit) => {
+            edit.insert(range.start, formatStyleForPasting(this.selection, newStyleName!));
+            edit.delete(selection);
+            edit.insert(selection.start, `style={${selectedRootStyle}.${newStyleName}}`);
+            vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+          });
+        } else {
+          throw new Error('Could not find location to insert style for ' + selectedRootStyle);
+        }
       } else if (this.styleList.length === 1) {
         const rootStyleName = this.styleList[0].rootName;
         const rootStyle = this.styleList[0];
@@ -211,7 +213,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         this._editor?.edit((edit) => {
           if (isStyleSheetCreateSingleLine) {
             const insertColumn = lineContent.lastIndexOf('})');
-            console.log({insertColumn})
+            console.log({ insertColumn });
             edit.insert(new vscode.Position(endLineForExistingStyle, insertColumn), formatStyleForPasting(this.selection, newStyleName!));
           } else {
             edit.insert(new vscode.Position(endLineForExistingStyle - 1, 0), formatStyleForPasting(this.selection, newStyleName!));
@@ -255,8 +257,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    const stylesToDelete = _.flatMap(this.styleList.map(item => item.styles)).filter(item => item.usage === 0);
-    
+    const stylesToDelete = _.flatMap(this.styleList.map((item) => item.styles)).filter((item) => item.usage === 0);
+
     editor.edit((edit) => {
       for (let styleToDelete of stylesToDelete) {
         const start = new vscode.Position(styleToDelete.details.item.loc!.start.line! - 1, 0);

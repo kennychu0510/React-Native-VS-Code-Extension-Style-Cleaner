@@ -1,7 +1,7 @@
-//@ts-nocheck
-
 import { parse } from '@babel/parser';
 import { SourceLocation, ObjectProperty } from '@babel/types';
+import * as _ from 'lodash';
+
 
 type StyleDetail = {
   rootName: string;
@@ -19,25 +19,25 @@ export function getStyles(text: string): StyleDetail[] {
 
   ast.program.body
     .filter((node) => node.type === 'VariableDeclaration')
-    .forEach((node) => {
+    .forEach((node: any) => {
       node.declarations
-        .filter((item) => item.type === 'VariableDeclarator')
-        .forEach((item) => {
+        .filter((item: any) => item.type === 'VariableDeclarator')
+        .forEach((item: any) => {
           const init = item.init;
           const callee = init?.callee;
           const obj = callee?.object;
           const property = callee?.property;
 
-          const styles = {};
+          const styles: any = {};
           let rootName = '';
-          let styleType = 'normal';
-          let location = {};
+          const styleType = 'normal';
+          let location: any = {};
 
           if (init.type === 'CallExpression' && obj?.name === 'StyleSheet' && property?.name === 'create') {
             rootName = item.id.name;
 
             location = item.loc;
-            init?.arguments[0].properties.forEach((item) => {
+            init?.arguments[0].properties.forEach((item: any) => {
               const name = item.key.name;
               styles[name] = {
                 usage: 0,
@@ -53,10 +53,10 @@ export function getStyles(text: string): StyleDetail[] {
             });
           } else if (init.type === 'ArrowFunctionExpression' && init.body.callee?.object.name === 'StyleSheet') {
             rootName = item.id.name ?? '';
-            styleType = 'arrow';
+            const styleType = 'arrow';
             location = item.loc;
 
-            init.body.arguments[0].properties.forEach((item) => {
+            init.body.arguments[0].properties.forEach((item: any) => {
               const name = item.key.name;
               styles[name] = {
                 usage: 0,
@@ -104,7 +104,7 @@ type ParsedStyle = {
   location: SourceLocation;
   styleType: 'normal' | 'arrow';
 };
-export function parseStyleFromArrayToList(stylesRaw): ParsedStyle[] {
+export function parseStyleFromArrayToList(stylesRaw: StyleDetail[]): ParsedStyle[] {
   const styleList: any = [];
   for (let i = 0; i < stylesRaw.length; i++) {
     const styleDetail: any = [];
@@ -123,7 +123,7 @@ export function parseStyleFromArrayToList(stylesRaw): ParsedStyle[] {
   return styleList;
 }
 
-export function findStylesUsed(styleList, text) {
+export function findStylesUsed(styleList: ParsedStyle[], text: string) {
   const stylesUsed = [];
   for (let i = 0; i < styleList.length; i++) {
     const styleObj = styleList[i];
@@ -157,7 +157,7 @@ export function checkSelectionIsValidStyle(selection: string): boolean {
   }
   const trimmed = selection.replace(/\s/g, '');
   const styleContents = trimmed.slice('style={{'.length, -2);
-  const keyValuePairs = styleContents.split(',');
+  const keyValuePairs = _.compact(styleContents.split(','));
   if (keyValuePairs.length === 0) {
     return false;
   }
@@ -194,7 +194,7 @@ export function formatStyleForPasting(styles: string, styleName: string): string
   return '  ' + styleName + ': {\n' + formatted.join(',\n') + ',\n  },\n';
 }
 
-export function isValidObjectKey(str) {
+export function isValidObjectKey(str: string) {
   if (typeof str !== 'string' || str === '' || str.startsWith('_') || /^\d/.test(str) || str.includes(' ')) {
     return false;
   }

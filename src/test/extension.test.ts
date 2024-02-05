@@ -8,7 +8,7 @@ import * as mocha from 'mocha'
 suite('RN Styles Cleaner', () => {
   const showErrorMessageSpy = sinon.spy(vscode.window, 'showErrorMessage');
 
-  test('Scenario 1: Stylesheet contains at least one item', async () => {
+  test('Extract styles - Scenario 1: Stylesheet contains at least one item', async () => {
     const scenario = 'one-style';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, scenario, 'working.js');
@@ -40,7 +40,7 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Scenario 2: No stylesheet', async () => {
+  test('Extract styles - Scenario 2: No stylesheet', async () => {
     const scenario = 'no-style';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, scenario, 'working.js');
@@ -72,7 +72,42 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Scenario 3: Selection is invalid style', async () => {
+  test('Extract styles - Scenario 4: Selected style is multi-line', async () => {
+    showErrorMessageSpy.resetHistory();
+    const scenario = 'multi-line-selection';
+
+    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
+    const filePath = path.join(workspaceFolder, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'after.js'), 'utf8');
+
+    // create new file for testing
+    fs.writeFileSync(filePath, beforeFile, 'utf8');
+
+    // Open the file in the file explorer
+    const uri = vscode.Uri.file(filePath);
+    await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(document);
+
+    // select line 7 col 7 to line 10 col 9
+    const selection = new vscode.Selection(6, 6, 9, 8);
+    vscode.window.activeTextEditor!.selection = selection;
+
+    await sleep();
+
+    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', 'container');
+
+    await vscode.commands.executeCommand('workbench.action.files.save');
+
+    // get content of current file
+    const currentFile = fs.readFileSync(filePath, 'utf8');
+
+    // assert beforeFile not equal after file
+    assert.strictEqual(currentFile, afterFile);
+  });
+
+  test('Extract styles - Scenario 4: Selection is invalid style', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'invalid-style';
 
@@ -106,7 +141,7 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Scenario 4: Clean unused style when there is 1 root style', async () => {
+  test('Remove Unused Styles - Scenario 1: Clean unused style when there is 1 root style', async () => {
     const scenario = 'clean-style-1';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
@@ -133,7 +168,7 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Scenario 5: Clean unused style when there is no unused style', async () => {
+  test('Remove Unused Styles - Scenario 2: Clean unused style when there is no unused style', async () => {
     const scenario = 'clean-style-no-unused';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
@@ -159,7 +194,7 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Scenario 6: Clean unused style when there is no styles', async () => {
+  test('Remove Unused Styles - Scenario 3: Clean unused style when there is no styles', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-no-styles';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
@@ -188,7 +223,7 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Scenario 7: Clean unused style when there is more than 1 root styles', async () => {
+  test('Remove Unused Styles - Scenario 4: Clean unused style when there is more than 1 root styles', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-2';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
@@ -216,7 +251,7 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Scenario 8: Clean multiple unused style ', async () => {
+  test('Remove Unused Styles - Scenario 5: Clean multiple unused style ', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-multiple';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
@@ -243,6 +278,8 @@ suite('RN Styles Cleaner', () => {
     // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
+
+ 
 
 });
 
