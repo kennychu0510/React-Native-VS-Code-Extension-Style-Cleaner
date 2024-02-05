@@ -78,6 +78,17 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
+  test('Extract styles - Scenario 3: No active editor', async () => {
+    showErrorMessageSpy.resetHistory();
+    // close all editor windows
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+
+    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet');
+
+    assert.strictEqual(showErrorMessageSpy.calledOnce, true);
+    
+  });
+
   test('Extract styles - Scenario 4: Selected style is multi-line', async () => {
     const scenario = 'multi-line-selection';
 
@@ -209,17 +220,6 @@ suite('RN Styles Cleaner', () => {
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
     assert.strictEqual(currentFile, afterFile);
-  });
-
-  test('Extract styles - Scenario 8: No active editor', async () => {
-    showErrorMessageSpy.resetHistory();
-    // close all editor windows
-    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-
-    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet');
-
-    assert.strictEqual(showErrorMessageSpy.calledOnce, true);
-    
   });
 
   /* Styles Cleaning */
@@ -438,6 +438,40 @@ suite('RN Styles Cleaner', () => {
     await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
     // save the file
     await vscode.commands.executeCommand('workbench.action.files.save');
+    // get content of current file
+    const currentFile = fs.readFileSync(filePath, 'utf8');
+
+    assert.strictEqual(currentFile, afterFile);
+  });
+
+  test('Copy Styles From Selection - Scenario 4: When selection contains no styles', async () => {
+    showErrorMessageSpy.resetHistory();
+    const scenario = 'no-styles';
+    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
+
+    const filePath = path.join(workspaceFolder, features.copyStyles, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'after.js'), 'utf8');
+
+    // create new file for testing
+    fs.writeFileSync(filePath, beforeFile, 'utf8');
+
+    // Open the file in the file explorer
+    const uri = vscode.Uri.file(filePath);
+    await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(document);
+    await sleep();
+
+    // select line 6 col 5 to line 6 col 55
+    const selection = new vscode.Selection(5, 4, 5, 54);
+    vscode.window.activeTextEditor!.selection = selection;
+    await sleep();
+
+    await vscode.commands.executeCommand('RNStylesCleaner.copyStylesFromSelection');
+
+    assert.strictEqual(showErrorMessageSpy.calledOnce, true);
+
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
