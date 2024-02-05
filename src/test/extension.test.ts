@@ -216,6 +216,34 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
+  test('Scenario 8: Clean multiple unused style ', async () => {
+    showErrorMessageSpy.resetHistory();
+    const scenario = 'clean-style-multiple';
+    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
+
+    const filePath = path.join(workspaceFolder, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'after.js'), 'utf8');
+
+    // create new file for testing
+    fs.writeFileSync(filePath, beforeFile, 'utf8');
+
+    // Open the file in the file explorer
+    const uri = vscode.Uri.file(filePath);
+    await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(document);
+    await sleep()
+    await vscode.commands.executeCommand('RNStylesCleaner.removeUnusedStyles');
+    await vscode.commands.executeCommand('workbench.action.files.save');
+    
+    // get content of current file
+    const currentFile = fs.readFileSync(filePath, 'utf8');
+
+    // assert beforeFile not equal after file
+    assert.strictEqual(currentFile, afterFile);
+  });
+
 });
 
 //sleep function
