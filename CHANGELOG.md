@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.0] - 2024-02-05
+- Added integration testing with vscode-test
+- Added feature to extract styles into stylesheet object
+- Added support for calling functions using vscode commands
+
 ## [0.0.9] - 2023-08-19
 - Added copy style from selection feature
 
