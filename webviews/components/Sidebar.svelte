@@ -35,13 +35,7 @@
   }
 
   function deleteUnusedStyles() {
-    const stylesToDelete = unusedStyles.reverse();
-    tsvscode.postMessage({ type: 'onDelete', value: JSON.stringify(stylesToDelete) });
-    styleList = styleList.map((rootStyle) => ({
-      ...rootStyle,
-      styles: rootStyle.styles.filter((style: any) => style.usage !== 0),
-    }));
-    styleList = styleList.filter((item) => item.styles.length > 0);
+    tsvscode.postMessage({ type: 'onDelete', value: '' });
   }
 
   function goToLocation(style: any) {
@@ -75,6 +69,13 @@
           selection = result.selection;
           isValidStyleSelection = result.isValidStyle;
           break;
+        }
+        case 'removeUnusedStylesSuccess': {
+          styleList = styleList.map((rootStyle) => ({
+            ...rootStyle,
+            styles: rootStyle.styles.filter((style: any) => style.usage !== 0),
+          }));
+          styleList = styleList.filter((item) => item.styles.length > 0);
         }
       }
     });

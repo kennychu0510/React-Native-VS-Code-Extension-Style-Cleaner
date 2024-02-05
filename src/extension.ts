@@ -34,6 +34,9 @@ export function activate(context: vscode.ExtensionContext) {
       }
       sidebarProvider.handleExtractSelectionIntoStyleSheet(arg1);
     }),
+    vscode.commands.registerCommand('RNStylesCleaner.removeUnusedStyles', () => {
+      sidebarProvider.handleRemoveUnusedStyles();
+    }),
   ];
   subscriptions.forEach((item) => context.subscriptions.push(item));
 }

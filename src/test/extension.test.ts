@@ -1,27 +1,24 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as fs from 'fs';
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../extension';
 import * as sinon from 'sinon';
 
 suite('Extract style into stylesheet', () => {
   test('Scenario 1: Stylesheet contains at least one item', async () => {
-    // Get the current workspace directory
+    const scenario = 'one-style';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
-    const filePath = path.join(workspaceFolder, 'one-style', 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, 'one-style', 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, 'one-style', 'after.js'), 'utf8');
+    const filePath = path.join(workspaceFolder, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'after.js'), 'utf8');
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
 
     // Open the file in the file explorer
     const uri = vscode.Uri.file(filePath);
-    const document = await vscode.workspace.openTextDocument(uri);
     await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(document);
 
     // select line 6 col 11 to line 6 col 54
@@ -41,19 +38,19 @@ suite('Extract style into stylesheet', () => {
   });
 
   test('Scenario 2: No stylesheet', async () => {
-    // Get the current workspace directory
+    const scenario = 'no-style';
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
-    const filePath = path.join(workspaceFolder, 'no-style', 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, 'no-style', 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, 'no-style', 'after.js'), 'utf8');
+    const filePath = path.join(workspaceFolder, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'after.js'), 'utf8');
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
 
     // Open the file in the file explorer
     const uri = vscode.Uri.file(filePath);
-    const document = await vscode.workspace.openTextDocument(uri);
     await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(document);
 
     // select line 6 col 11 to line 6 col 54
@@ -73,21 +70,21 @@ suite('Extract style into stylesheet', () => {
   });
 
   test('Scenario 3: Selection is invalid style', async () => {
+    const scenario = 'invalid-style';
     const showErrorMessageSpy = sinon.spy(vscode.window, 'showErrorMessage');
 
-    // Get the current workspace directory
     const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
-    const filePath = path.join(workspaceFolder, 'invalid-style', 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, 'invalid-style', 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, 'invalid-style', 'after.js'), 'utf8');
+    const filePath = path.join(workspaceFolder, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'after.js'), 'utf8');
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
 
     // Open the file in the file explorer
     const uri = vscode.Uri.file(filePath);
-    const document = await vscode.workspace.openTextDocument(uri);
     await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(document);
 
     // select line 6 col 5 to line 6 col 29
@@ -105,6 +102,34 @@ suite('Extract style into stylesheet', () => {
     // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
+
+  test('Scenario 4: Clean unused style when there is 1 root style', async () => {
+    const scenario = 'clean-style-1';
+    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
+
+    const filePath = path.join(workspaceFolder, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, scenario, 'after.js'), 'utf8');
+
+    // create new file for testing
+    fs.writeFileSync(filePath, beforeFile, 'utf8');
+
+    // Open the file in the file explorer
+    const uri = vscode.Uri.file(filePath);
+    await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(document);
+    await sleep()
+    await vscode.commands.executeCommand('RNStylesCleaner.removeUnusedStyles');
+    await vscode.commands.executeCommand('workbench.action.files.save');
+    
+    // get content of current file
+    const currentFile = fs.readFileSync(filePath, 'utf8');
+
+    // assert beforeFile not equal after file
+    assert.strictEqual(currentFile, afterFile);
+  });
+
 });
 
 //sleep function

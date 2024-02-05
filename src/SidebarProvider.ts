@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { checkSelectionIsValidStyle, findStylesUsed, formatStyleForPasting, getStyles, isValidObjectKey, parseStyleFromArrayToList } from './helper';
+import * as _ from 'lodash'
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
   _doc?: vscode.TextDocument;
   _editor?: vscode.TextEditor;
-  styleList: any;
   selection: string;
-  allStyles: ReturnType<typeof parseStyleFromArrayToList> = [];
+  styleList: ReturnType<typeof parseStyleFromArrayToList> = [];
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     this._editor = vscode.window.activeTextEditor;
@@ -35,27 +35,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         }
 
         case 'onDelete': {
-          let editor = vscode.window.activeTextEditor;
-          if (!editor) {
-            vscode.window.showErrorMessage('No active text editor');
-            return;
-          }
-
-          if (!data.value) {
-            vscode.window.showErrorMessage('Nothing to delete');
-            return;
-          }
-
-          const stylesToDelete = JSON.parse(data.value);
-          editor.edit((edit) => {
-            for (let styleToDelete of stylesToDelete) {
-              const start = new vscode.Position(styleToDelete.start.line - 1, 0);
-              const end = new vscode.Position(styleToDelete.end.line, 0);
-              const location = new vscode.Range(start, end);
-              edit.delete(location);
-            }
-          });
-          vscode.window.showInformationMessage(`${stylesToDelete.length} style${stylesToDelete.length > 1 ? 's' : ''} deleted successfully!`);
+          this.handleRemoveUnusedStyles();
           break;
         }
         case 'onClickStyle': {
@@ -116,24 +96,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           this.handleExtractSelectionIntoStyleSheet();
           break;
         case 'testing': {
-          const style = this.allStyles[0];
-          if (!style) return;
-          const start = new vscode.Position(style.location.start.line - 1, 0);
-          const end = new vscode.Position(style.location.end.line - 1, style.location.end.column);
-          const range = new vscode.Range(start, end);
-          const editor = this._editor;
-          if (!editor) return
+          console.log(this.styleList)
 
-          console.log('Editor:', this._editor);
-          console.log('Range:', range);
-          console.log('Text:', vscode.window.activeTextEditor?.document.getText(range));
         }
       }
     });
   }
 
   private getLocationOfEndOfStyleObject(objectName: string): number | null {
-    const style = this.allStyles.find((style) => style.rootName === objectName);
+    const style = this.styleList.find((style) => style.rootName === objectName);
     if (!style) {
       return null;
     }
@@ -168,21 +139,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       const stylesRaw = getStyles(text);
 
       const styleList = parseStyleFromArrayToList(stylesRaw);
-      this.styleList = styleList;
 
       this._view.webview.postMessage({
         type: 'onReceiveStyles',
         value: JSON.stringify(styleList),
       });
 
-      this.allStyles = styleList;
+      this.styleList = styleList;
 
-      // let stylesCount = 0
-      // for (let style of stylesRaw) {
-      //   stylesCount += Object.keys(style.styles).length
-      // }
-
-      // vscode.window.showInformationMessage(`Found ${stylesCount} style${stylesCount > 1 ? 's' : ''}!`);
     } catch (error) {
       console.log(error);
       this._view.webview.postMessage({
@@ -215,10 +179,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
       const selection = this._editor.selection;
 
-      if (this.allStyles.length > 1) {
+      if (this.styleList.length > 1) {
         // FIXME:
         // vs code prompt for selection
-        const options = this.allStyles.map((style) => style.rootName);
+        const options = this.styleList.map((style) => style.rootName);
         vscode.window.showQuickPick(options).then((selectedStyle) => {
           if (selectedStyle) {
             const location = this.getLocationOfEndOfStyleObject(selectedStyle);
@@ -237,9 +201,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             }
           }
         });
-      } else if (this.allStyles.length === 1) {
-        const rootStyleName = this.allStyles[0].rootName;
-        const rootStyle = this.allStyles[0];
+      } else if (this.styleList.length === 1) {
+        const rootStyleName = this.styleList[0].rootName;
+        const rootStyle = this.styleList[0];
         const isStyleSheetCreateSingleLine = rootStyle.location.start.line === rootStyle.location.end.line;
         const lineContent = this._editor.document.lineAt(rootStyle.location.start.line - 1).text;
 
@@ -277,6 +241,37 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       vscode.window.showErrorMessage('Failed to extract style into stylesheet');
       console.error(error);
     }
+  }
+
+  public async handleRemoveUnusedStyles() {
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showErrorMessage('No active text editor');
+      return;
+    }
+
+    if (this.styleList.length === 0) {
+      vscode.window.showErrorMessage('Nothing to delete');
+      return;
+    }
+
+    const stylesToDelete = _.flatMap(this.styleList.map(item => item.styles)).filter(item => item.usage === 0);
+    
+    editor.edit((edit) => {
+      for (let styleToDelete of stylesToDelete) {
+        const start = new vscode.Position(styleToDelete.details.item.loc!.start.line! - 1, 0);
+        const end = new vscode.Position(styleToDelete.details.item.loc!.end.line!, 0);
+        const location = new vscode.Range(start, end);
+        edit.delete(location);
+      }
+    });
+    vscode.window.showInformationMessage(`${stylesToDelete.length} style${stylesToDelete.length > 1 ? 's' : ''} deleted successfully!`);
+
+    // update UI styles
+    this._view?.webview.postMessage({
+      type: 'removeUnusedStylesSuccess',
+      value: '',
+    });
   }
 
   public revive(panel: vscode.WebviewView) {

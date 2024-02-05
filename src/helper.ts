@@ -1,7 +1,7 @@
 //@ts-nocheck
 
 import { parse } from '@babel/parser';
-import { SourceLocation } from '@babel/types';
+import { SourceLocation, ObjectProperty } from '@babel/types';
 
 type StyleDetail = {
   rootName: string;
@@ -92,12 +92,14 @@ export function getStyles(text: string): StyleDetail[] {
   return styleList;
 }
 
+type ItemDetail = NonNullable<ObjectProperty>
+
 type ParsedStyle = {
   rootName: string;
   styles: {
     name: string;
     usage: number;
-    details: any;
+    details: { item: ItemDetail };
   }[];
   location: SourceLocation;
   styleType: 'normal' | 'arrow';
@@ -147,7 +149,6 @@ export function findStylesUsed(styleList, text) {
 }
 
 export function checkSelectionIsValidStyle(selection: string): boolean {
-  
   if (!selection.startsWith('style={{')) {
     return false;
   }
@@ -158,18 +159,18 @@ export function checkSelectionIsValidStyle(selection: string): boolean {
   const styleContents = trimmed.slice('style={{'.length, -2);
   const keyValuePairs = styleContents.split(',');
   if (keyValuePairs.length === 0) {
-    return false
+    return false;
   }
 
-  const isAllValidStyles = keyValuePairs.every(pair => {
+  const isAllValidStyles = keyValuePairs.every((pair) => {
     const [key, value] = pair.split(':', 2);
     if (!key || !value) {
       return false;
     }
     return true;
-  })
+  });
   if (!isAllValidStyles) {
-    return false
+    return false;
   }
 
   return true;
@@ -178,16 +179,19 @@ export function checkSelectionIsValidStyle(selection: string): boolean {
 export function getStyleContents(style: string): string[] {
   const trimmed = style.replace(/\s/g, '');
   const styleContents = trimmed.slice('style={{'.length, -2);
-  const keyValuePairs = styleContents.split(',').filter(item => !!item).map(item => item.replace(/:/, ": "));
+  const keyValuePairs = styleContents
+    .split(',')
+    .filter((item) => !!item)
+    .map((item) => item.replace(/:/, ': '));
   return keyValuePairs;
 }
 
 export function formatStyleForPasting(styles: string, styleName: string): string {
   const styleContents = getStyleContents(styles);
-  const formatted = styleContents.map(item => {
+  const formatted = styleContents.map((item) => {
     return `    ${item}`;
   });
-  return "  " + styleName + ": {\n" + formatted.join(',\n') + ",\n  },\n";
+  return '  ' + styleName + ': {\n' + formatted.join(',\n') + ',\n  },\n';
 }
 
 export function isValidObjectKey(str) {
