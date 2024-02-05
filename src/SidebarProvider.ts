@@ -255,8 +255,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     editor.edit((edit) => {
       if (isStyleSheetCreateSingleLine) {
         const insertColumn = lineContent.lastIndexOf('})');
-        console.log({ insertColumn });
-        edit.insert(new vscode.Position(endLineForExistingStyle, insertColumn), formatStyleForPasting(this.selection, newStyleName));
+        edit.insert(new vscode.Position(endLineForExistingStyle - 1, insertColumn), '\n' + formatStyleForPasting(this.selection, newStyleName));
       } else {
         edit.insert(new vscode.Position(endLineForExistingStyle - 1, 0), formatStyleForPasting(this.selection, newStyleName));
       }

@@ -44,7 +44,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -76,7 +75,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -110,7 +108,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -144,7 +141,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -178,7 +174,40 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
+    assert.strictEqual(currentFile, afterFile);
+  });
+
+  test('Extract styles - Scenario 7: 1 root style with 0 styles', async () => {
+    const scenario = 'one-empty-style';
+
+    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
+    const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
+    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
+    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
+
+    // create new file for testing
+    fs.writeFileSync(filePath, beforeFile, 'utf8');
+
+    // Open the file in the file explorer
+    const uri = vscode.Uri.file(filePath);
+    await vscode.commands.executeCommand('RNStylesCleaner-sidebar.focus');
+    const document = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(document);
+
+    // select line 6 col 11 to line 6 col 54
+    const selection = new vscode.Selection(5, 10, 5, 53);
+
+    vscode.window.activeTextEditor!.selection = selection;
+
+    await sleep();
+
+    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', 'container');
+
+    await vscode.commands.executeCommand('workbench.action.files.save');
+
+    // get content of current file
+    const currentFile = fs.readFileSync(filePath, 'utf8');
+
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -207,7 +236,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -233,7 +261,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -262,7 +289,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -290,7 +316,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -318,7 +343,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -350,7 +374,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 
@@ -395,7 +418,6 @@ suite('RN Styles Cleaner', () => {
     // get content of current file
     const currentFile = fs.readFileSync(filePath, 'utf8');
 
-    // // assert beforeFile not equal after file
     assert.strictEqual(currentFile, afterFile);
   });
 });
