@@ -76,9 +76,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           this.handleExtractSelectionIntoStyleSheet();
           break;
         case 'testing': {
-          const selection = this._editor?.document.getText(this._editor.selection) ?? '';
-          console.log({ selection });
-          console.log({ isValid: checkSelectionIsValidStyle(selection) });
+          break;
         }
       }
     });
@@ -267,19 +265,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   public async handleCopyStylesFromSelection() {
     if (!this._editor || !this._editor.selection) {
       vscode.window.showErrorMessage('No active text editor found');
-      return
+      return;
     }
-    
+
     const selectedText = this._editor.document.getText(this._editor.selection);
     if (!selectedText) {
       vscode.window.showErrorMessage('No selection found');
-      return
+      return;
     }
 
     const stylesUsed = findStylesUsed(this.styleList, selectedText);
     if (stylesUsed.length === 0) {
       vscode.window.showErrorMessage('No styles within selection!');
-      return
+      return;
     }
     const ranges = [];
     for (let style of stylesUsed) {

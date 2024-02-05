@@ -160,7 +160,6 @@
 {#if isValidStyleSelection}
   <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
 {/if}
-<button on:click={testing}>Testing</button>
 
 <style>
   .headerContainer {
