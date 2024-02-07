@@ -11,14 +11,15 @@ const features = {
   removeStyles: 'remove-styles',
 } as const;
 
+// get current working folder path
+const workspaceFolder = path.join(__dirname, '..', '..', 'src', 'test', 'resources');
+
 suite('RN Styles Cleaner', () => {
   const showErrorMessageSpy = sinon.spy(vscode.window, 'showErrorMessage');
 
   /* Styles Extraction */
-
   test('Extract styles - Scenario 1: Stylesheet contains at least one item', async () => {
     const scenario = 'one-style';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
     const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
@@ -49,7 +50,6 @@ suite('RN Styles Cleaner', () => {
 
   test('Extract styles - Scenario 2: No stylesheet', async () => {
     const scenario = 'no-style';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
     const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
@@ -92,7 +92,6 @@ suite('RN Styles Cleaner', () => {
   test('Extract styles - Scenario 4: Selected style is multi-line', async () => {
     const scenario = 'multi-line-selection';
 
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
     const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
@@ -126,7 +125,6 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'invalid-style';
 
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
     const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
@@ -158,7 +156,6 @@ suite('RN Styles Cleaner', () => {
   test('Extract styles - Scenario 6: More than 1 root style ', async () => {
     const scenario = 'extract-multiple-root-styles';
 
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
     const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
@@ -191,7 +188,6 @@ suite('RN Styles Cleaner', () => {
   test('Extract styles - Scenario 7: 1 root style with 0 styles', async () => {
     const scenario = 'one-empty-style';
 
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
     const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
     const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
@@ -226,7 +222,6 @@ suite('RN Styles Cleaner', () => {
 
   test('Remove Unused Styles - Scenario 1: Clean unused style when there is 1 root style', async () => {
     const scenario = 'clean-style-1';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
     const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
@@ -252,7 +247,6 @@ suite('RN Styles Cleaner', () => {
 
   test('Remove Unused Styles - Scenario 2: Clean unused style when there is no unused style', async () => {
     const scenario = 'clean-style-no-unused';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
     const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
@@ -278,7 +272,6 @@ suite('RN Styles Cleaner', () => {
   test('Remove Unused Styles - Scenario 3: Clean unused style when there is no styles', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-no-styles';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
     const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
@@ -306,7 +299,6 @@ suite('RN Styles Cleaner', () => {
   test('Remove Unused Styles - Scenario 4: Clean unused style when there is more than 1 root style', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-2';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
     const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
@@ -333,7 +325,6 @@ suite('RN Styles Cleaner', () => {
   test('Remove Unused Styles - Scenario 5: Clean multiple unused style ', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-multiple';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
     const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
@@ -374,7 +365,6 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
 
     const scenario = 'copy-styles-no-selection';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
     const filePath = path.join(workspaceFolder, features.copyStyles, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'), 'utf8');
@@ -410,7 +400,6 @@ suite('RN Styles Cleaner', () => {
 
   test('Copy Styles From Selection - Scenario 3: When selected one style in one line', async () => {
     const scenario = 'copy-styles-one-line';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
     const filePath = path.join(workspaceFolder, features.copyStyles, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'), 'utf8');
@@ -447,7 +436,6 @@ suite('RN Styles Cleaner', () => {
   test('Copy Styles From Selection - Scenario 4: When selection contains no styles', async () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'no-styles';
-    const workspaceFolder = vscode.workspace.workspaceFolders![0].uri.fsPath;
 
     const filePath = path.join(workspaceFolder, features.copyStyles, scenario, 'working.js');
     const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'), 'utf8');
