@@ -161,16 +161,6 @@ describe('getStyleContents', () => {
   test.only('nested style', () => {
     const selection = `style={{ flex: 1, transform: [{scaleX: 2, scaleY: 4}] }}`;
     const styleForPasting = getStyleContents(selection);
-    console.log(styleForPasting)
     expect(styleForPasting).toEqual(['flex: 1', 'transform: [{scaleX: 2, scaleY: 4}]']);
   });
-
-  // test('when style is more than 1 layer deep', () => {
-  //   const selection = `style={{ transform: [{scaleX: 2, scaleY: 4}], }}`;
-  //   const styleForPasting = formatStyleForPasting(selection, 'newStyle');
-  //   console.log(styleForPasting)
-  //   expect(styleForPasting).toEqual(`newStyle: {
-  //     transform: [{scaleX:2,scaleY:4}],
-  //   },`);
-  // });
 });

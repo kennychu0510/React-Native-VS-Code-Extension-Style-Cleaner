@@ -165,30 +165,44 @@ export function getStyleContents(style: string): string[] {
   const trimmed = style.replace(/\s/g, '');
   const styleContents = trimmed.slice('style={{'.length, -2);
   const styles = [];
-
-  try {
-    const regex = /([^,:]+):([^,}]+)/g;
-    let match;
-    while ((match = regex.exec(styleContents)) !== null) {
-      const styleName = match[1].trim();
-      const styleValue = match[2].trim();
-
-      // Check if the style value is a nested object
-      if (styleValue.startsWith("{") && styleValue.endsWith("}")) {
-        try {
-          const nestedStyle = JSON.parse(styleValue);
-          styles.push(`${styleName}: ${JSON.stringify(nestedStyle).replace(/\"/g, '')}`);
-        } catch (error) {
-          // Invalid JSON format, treat it as a regular value
-          styles.push(`${styleName}: ${styleValue}`);
-        }
-      } else {
-        styles.push(`${styleName}: ${styleValue}`);
-      }
+  let currentKey = ''
+  let currentValue = '';
+  let state: 'key' | 'value' = 'key';
+  let nestedLevel = 0;
+  for (let char of styleContents) {
+    if (char === '[') {
+      nestedLevel++;
     }
-  } catch (error) {
-    return [];
+    if (char === ']') {
+      nestedLevel--;
+    }
+    if (char === ':' && !nestedLevel) {
+      state = 'value';
+      continue;
+    } 
+    if (char === ',' && !nestedLevel) {
+      styles.push(`${currentKey}: ${currentValue}`);
+      currentKey = '';
+      currentValue = '';
+      state = 'key';
+      continue;
+    }
+    if (char === ':' && nestedLevel) {
+      currentValue += ': '
+      continue;
+    }
+    if (char === ',' && nestedLevel) {
+      currentValue += ', ';
+      continue;
+    }
+    if (state === 'key') {
+      currentKey += char;
+    }
+    if (state === 'value') {
+      currentValue += char;
+    } 
   }
+  styles.push(`${currentKey}: ${currentValue}`);
 
   return styles;
 }
