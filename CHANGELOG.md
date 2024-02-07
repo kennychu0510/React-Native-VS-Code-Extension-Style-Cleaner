@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.0.2] - 2024-02-07
+- Fix bug for extracting multi-line selection of inline style
+
 ## [1.0.1] - 2024-02-07
 - Added support for extracting inline styles containing nested objects
 

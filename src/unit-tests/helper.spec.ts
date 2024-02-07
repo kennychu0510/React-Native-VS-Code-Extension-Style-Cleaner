@@ -158,9 +158,17 @@ describe('getStyleContents', () => {
     expect(styleForPasting).toEqual(['flex: 1', "width: '100%'"]);
   });
 
-  test.only('nested style', () => {
+  test('nested style', () => {
     const selection = `style={{ flex: 1, transform: [{scaleX: 2, scaleY: 4}] }}`;
     const styleForPasting = getStyleContents(selection);
     expect(styleForPasting).toEqual(['flex: 1', 'transform: [{scaleX: 2, scaleY: 4}]']);
+  });
+  test('nested style', () => {
+    const selection = `style={{
+      flex: 1,
+      backgroundColor: 'red',
+    }}}`;
+    const styleForPasting = getStyleContents(selection);
+    expect(styleForPasting).toEqual(['flex: 1', "backgroundColor: 'red'"]);
   });
 });

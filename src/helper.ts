@@ -181,7 +181,9 @@ export function getStyleContents(style: string): string[] {
       continue;
     } 
     if (char === ',' && !nestedLevel) {
-      styles.push(`${currentKey}: ${currentValue}`);
+      if (currentKey && currentValue) {
+        styles.push(`${currentKey}: ${currentValue}`);
+      }
       currentKey = '';
       currentValue = '';
       state = 'key';
@@ -202,7 +204,9 @@ export function getStyleContents(style: string): string[] {
       currentValue += char;
     } 
   }
-  styles.push(`${currentKey}: ${currentValue}`);
+  if (currentKey && currentValue) {
+    styles.push(`${currentKey}: ${currentValue}`);
+  }
 
   return styles;
 }
