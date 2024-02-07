@@ -1,7 +1,7 @@
 import { parse } from '@babel/parser';
 import { SourceLocation, ObjectProperty } from '@babel/types';
 import * as _ from 'lodash';
-import { ParsedStyle, StyleDetail } from './model';
+import { ParsedStyle, StyleDetail, StyleUsed } from './model';
 
 
 
@@ -108,7 +108,7 @@ export function parseStyleFromArrayToList(stylesRaw: StyleDetail[]): ParsedStyle
   return styleList;
 }
 
-export function findStylesUsed(styleList: ParsedStyle[], text: string) {
+export function findStylesUsed(styleList: ParsedStyle[], text: string): StyleUsed[] {
   const stylesUsed = [];
   for (let i = 0; i < styleList.length; i++) {
     const styleObj = styleList[i];

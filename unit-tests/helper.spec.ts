@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import { checkSelectionIsValidStyle, findStylesUsed, getStyles, parseStyleFromArrayToList } from '../src/helper';
+import { checkSelectionIsValidStyle, findStylesUsed, getStyles, parseStyleFromArrayToList, formatStyleForPasting } from '../src/helper';
 import fs from 'fs';
 import path from 'path'
 
@@ -74,11 +74,11 @@ describe('For multiple styles in component', () => {
   });
 
   test('expect style usage of individual styles are correct', () => {
-    expect(componentStyle.styles.componentContainer.usage).toBe(1);
-    expect(componentStyle.styles.text.usage).toBe(0);
+    expect(componentStyle!.styles.componentContainer.usage).toBe(1);
+    expect(componentStyle!.styles.text.usage).toBe(0);
 
-    expect(styles.styles.container.usage).toBe(0);
-    expect(styles.styles.text.usage).toBe(1);
+    expect(styles!.styles.container.usage).toBe(0);
+    expect(styles!.styles.text.usage).toBe(1);
   });
 });
 
@@ -95,21 +95,21 @@ describe('transform style from object to array', () => {
   });
 });
 
-describe('check styles used in text', () => {
-  const text = fs.readFileSync(path.join(folderDirectory, 'file1.js'), {
-    encoding: 'utf-8',
-  });
-  const result = getStyles(text);
-  const styleList = parseStyleFromArrayToList(result);
-  const selection = `
-  <View style={styles.container}>
-      <Text style={styles.text}>file1</Text>
-    </View>
-  `;
-  const stylesUsed = findStylesUsed(styleList, selection);
-  const containerStyleIsUsed = stylesUsed.find((item) => item.name === 'container');
-  const textStyleIsUsed = stylesUsed.find((item) => item.name === 'text');
-  test('transform style object to array correctly', () => {
+describe('findStylesUsed', () => {
+  test('Case 1', () => {
+    const text = fs.readFileSync(path.join(folderDirectory, 'file1.js'), {
+      encoding: 'utf-8',
+    });
+    const result = getStyles(text);
+    const styleList = parseStyleFromArrayToList(result);
+    const selection = `
+    <View style={styles.container}>
+        <Text style={styles.text}>file1</Text>
+      </View>
+    `;
+    const stylesUsed = findStylesUsed(styleList, selection);
+    const containerStyleIsUsed = stylesUsed.find((item) => item.name === 'container');
+    const textStyleIsUsed = stylesUsed.find((item) => item.name === 'text');
     expect(containerStyleIsUsed).toBeDefined();
     expect(textStyleIsUsed).toBeDefined();
   });
@@ -135,5 +135,20 @@ describe('checkSelectionIsValidStyle', () => {
     const selection = `style={{ flex: , backgroundColor: }}`;
     const isValidStyle = checkSelectionIsValidStyle(selection);
     expect(isValidStyle).toBe(false);
+  });
+
+  test('when style is more than 1 layer deep', () => {
+    const selection = `style={{ transform: [{scaleX: 2}], }}`;
+    const isValidStyle = checkSelectionIsValidStyle(selection);
+    expect(isValidStyle).toBe(true);
+  });
+});
+
+describe.only('formatStyleForPasting', () => {
+  test('when style is more than 1 layer deep', () => {
+    const selection = `style={{ transform: [{scaleX: 2, scaleY: 4}], }}`;
+    const styleForPasting = formatStyleForPasting(selection, 'newStyle');
+    console.log(styleForPasting)
+    expect(styleForPasting).toBeDefined();
   });
 });

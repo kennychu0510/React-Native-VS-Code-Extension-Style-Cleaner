@@ -6,6 +6,7 @@
     styles: any;
     location: any;
     styleType: 'normal' | 'arrow';
+    inSelection?: boolean;
   };
 
   let styleList: StyleDetail[] = [];
@@ -28,6 +29,16 @@
     }
     return unusedStyles;
   }
+
+  function getStyleContents(style: string): {[key: string]: string}[] {
+  const trimmed = style.replace(/\s/g, '');
+  const styleContents = trimmed.slice('style={{'.length, -2);
+  const keyValuePairs = styleContents
+    .split(',')
+    .filter((item) => !!item)
+    .map((item) => ({[item.split(':')[0]]: item.split(':')[1]}));
+  return keyValuePairs;
+}
 
   function fetchStyles() {
     // send message to the extension asking for the selected text

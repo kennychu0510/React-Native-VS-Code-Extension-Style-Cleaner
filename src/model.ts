@@ -1,4 +1,4 @@
-import { ObjectProperty, SourceLocation } from "@babel/types";
+import { ObjectProperty, SourceLocation } from '@babel/types';
 
 export type StyleDetail = {
   rootName: string;
@@ -7,7 +7,7 @@ export type StyleDetail = {
   styleType: 'normal' | 'arrow';
 };
 
-type ItemDetail = NonNullable<ObjectProperty>
+type ItemDetail = NonNullable<ObjectProperty>;
 
 export type ParsedStyle = {
   rootName: string;
@@ -18,4 +18,9 @@ export type ParsedStyle = {
   }[];
   location: SourceLocation;
   styleType: 'normal' | 'arrow';
+};
+
+export type StyleUsed = {
+  name: string;
+  loc: SourceLocation | null | undefined;
 };
