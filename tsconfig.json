@@ -23,6 +23,5 @@
 		".vscode-test",
 		"webviews",
 		"vitest.config.ts"
-
 	]
 }

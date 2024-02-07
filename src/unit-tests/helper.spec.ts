@@ -1,10 +1,10 @@
 import { expect, test, describe } from 'vitest';
-import { checkSelectionIsValidStyle, findStylesUsed, getStyles, parseStyleFromArrayToList, formatStyleForPasting } from '../src/helper';
+import { checkSelectionIsValidStyle, findStylesUsed, getStyles, parseStyleFromArrayToList, formatStyleForPasting, getStyleContents } from '../helper';
 import fs from 'fs';
 import path from 'path'
 
 const __dirname = path.resolve();
-const folderDirectory = path.join(__dirname, 'unit-tests');
+const folderDirectory = path.join(__dirname, 'src', 'unit-tests');
 
 describe('For all styles used file', () => {
   const text = fs.readFileSync(path.join(folderDirectory, 'file1.js'), {
@@ -144,11 +144,33 @@ describe('checkSelectionIsValidStyle', () => {
   });
 });
 
-describe.only('formatStyleForPasting', () => {
-  test('when style is more than 1 layer deep', () => {
-    const selection = `style={{ transform: [{scaleX: 2, scaleY: 4}], }}`;
-    const styleForPasting = formatStyleForPasting(selection, 'newStyle');
+describe('getStyleContents', () => {
+  test('1 style', () => {
+    const selection = `style={{ flex: 1 }}`;
+    const styleForPasting = getStyleContents(selection);
     console.log(styleForPasting)
-    expect(styleForPasting).toBeDefined();
+    expect(styleForPasting).toEqual(['flex: 1']);
   });
+
+  test('2 styles', () => {
+    const selection = `style={{ flex: 1, width: '100%' }}`;
+    const styleForPasting = getStyleContents(selection);
+    expect(styleForPasting).toEqual(['flex: 1', "width: '100%'"]);
+  });
+
+  test.only('nested style', () => {
+    const selection = `style={{ flex: 1, transform: [{scaleX: 2, scaleY: 4}] }}`;
+    const styleForPasting = getStyleContents(selection);
+    console.log(styleForPasting)
+    expect(styleForPasting).toEqual(['flex: 1', 'transform: [{scaleX: 2, scaleY: 4}]']);
+  });
+
+  // test('when style is more than 1 layer deep', () => {
+  //   const selection = `style={{ transform: [{scaleX: 2, scaleY: 4}], }}`;
+  //   const styleForPasting = formatStyleForPasting(selection, 'newStyle');
+  //   console.log(styleForPasting)
+  //   expect(styleForPasting).toEqual(`newStyle: {
+  //     transform: [{scaleX:2,scaleY:4}],
+  //   },`);
+  // });
 });

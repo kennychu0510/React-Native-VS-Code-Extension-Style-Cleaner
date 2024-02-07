@@ -164,11 +164,33 @@ export function checkSelectionIsValidStyle(selection: string): boolean {
 export function getStyleContents(style: string): string[] {
   const trimmed = style.replace(/\s/g, '');
   const styleContents = trimmed.slice('style={{'.length, -2);
-  const keyValuePairs = styleContents
-    .split(',')
-    .filter((item) => !!item)
-    .map((item) => item.replace(/:/, ': '));
-  return keyValuePairs;
+  const styles = [];
+
+  try {
+    const regex = /([^,:]+):([^,}]+)/g;
+    let match;
+    while ((match = regex.exec(styleContents)) !== null) {
+      const styleName = match[1].trim();
+      const styleValue = match[2].trim();
+
+      // Check if the style value is a nested object
+      if (styleValue.startsWith("{") && styleValue.endsWith("}")) {
+        try {
+          const nestedStyle = JSON.parse(styleValue);
+          styles.push(`${styleName}: ${JSON.stringify(nestedStyle).replace(/\"/g, '')}`);
+        } catch (error) {
+          // Invalid JSON format, treat it as a regular value
+          styles.push(`${styleName}: ${styleValue}`);
+        }
+      } else {
+        styles.push(`${styleName}: ${styleValue}`);
+      }
+    }
+  } catch (error) {
+    return [];
+  }
+
+  return styles;
 }
 
 export function formatStyleForPasting(styles: string, styleName: string): string {
