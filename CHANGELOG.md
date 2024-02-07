@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.0.1] - 2024-02-07
+- Added support for extracting inline styles containing nested objects
+
 ## [1.0.0] - 2024-02-05
 - Added integration testing with vscode-test
 - Added feature to extract styles into stylesheet object

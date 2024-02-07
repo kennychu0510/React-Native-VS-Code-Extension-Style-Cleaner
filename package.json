@@ -2,7 +2,7 @@
   "name": "RNStylesCleaner",
   "displayName": "RN Styles Cleaner",
   "description": "VS Code Extension for cleaning styles in a React Native project",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "engines": {
     "vscode": "^1.60.0"
   },
