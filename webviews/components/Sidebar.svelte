@@ -13,9 +13,14 @@
   };
 
   let styleList: StyleDetail[] = [];
+  const defaultUsedStyles: string[] = []
   $: selection = '';
   $: unusedStyles = getUnusedStyles(styleList);
   $: isValidStyleSelection = false;
+  $: stylesUsed = defaultUsedStyles;
+
+  /* Elements */
+  let refreshButton: HTMLDivElement;
 
   function getUnusedStyles(styleList: StyleDetail[]) {
     const unusedStyles = [];
@@ -33,19 +38,13 @@
     return unusedStyles;
   }
 
-  function getStyleContents(style: string): {[key: string]: string}[] {
-  const trimmed = style.replace(/\s/g, '');
-  const styleContents = trimmed.slice('style={{'.length, -2);
-  const keyValuePairs = styleContents
-    .split(',')
-    .filter((item) => !!item)
-    .map((item) => ({[item.split(':')[0]]: item.split(':')[1]}));
-  return keyValuePairs;
-}
-
   function fetchStyles() {
     // send message to the extension asking for the selected text
+    refreshButton.classList.add('rotate');
     tsvscode.postMessage({ type: 'onFetchStyles', value: '' });
+    setTimeout(() => {
+      refreshButton.classList.remove('rotate');
+  }, 1000);
   }
 
   function deleteUnusedStyles() {
@@ -82,6 +81,7 @@
           const result = JSON.parse(message.value);
           selection = result.selection;
           isValidStyleSelection = result.isValidStyle;
+          stylesUsed = result.stylesUsed;
           break;
         }
         case 'removeUnusedStylesSuccess': {
@@ -101,7 +101,7 @@
 <div class="headerContainer">
   <h1>Styles Cleaner</h1>
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="refresh" on:click={fetchStyles}>
+  <div class="refresh" on:click={fetchStyles} bind:this={refreshButton}>
     <svg
       xmlns="http://www.w3.org/2000/svg"
       xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -131,13 +131,13 @@
 
   <table style="width: 100%;">
     <tr>
-      <th style="width:80%; text-align: left">Name</th>
+      <th style="width:80%; text-align: left" class="header-label">Name</th>
       <th>Usage</th>
     </tr>
     {#each styleList as item}
       <tr><td colspan="2" /></tr>
       <tr>
-        <td colspan="2" style="font-style:italic;">{item.rootName}</td>
+        <td colspan="2" class="root-name">{item.rootName}</td>
       </tr>
       {#each item.styles as style}
         <tr>
@@ -149,9 +149,15 @@
               </a>
             {:else}
               <!-- svelte-ignore a11y-invalid-attribute -->
-              <a href="" on:click={() => goToLocation(style)}>
-                {style.name}
-              </a>
+              {#if stylesUsed.includes(`${item.rootName}.${style.name}`)}
+                <a href="" class="highlighted" on:click={() => goToLocation(style)}>
+                  {style.name}
+                </a>
+              {:else}
+                <a href="" on:click={() => goToLocation(style)}>
+                  {style.name}
+                </a>
+              {/if}
             {/if}
           </td>
           <td style="text-align: center">
@@ -175,7 +181,7 @@
   <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
 {/if}
 
-<style>
+<style global>
   .headerContainer {
     display: flex;
     justify-content: space-between;
@@ -186,11 +192,31 @@
     display: flex;
     align-items: center;
   }
+
+  @keyframes rotateAnimation {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
   .refresh:hover {
     cursor: pointer;
   }
 
+  .rotate {
+    animation: rotateAnimation 1s ease forwards;
+  }
   .unused {
     color: rgb(235, 23, 58);
+  }
+
+  .root-name {
+    font-style: italic;
+  }
+
+  .highlighted {
+    background-color: yellow;
   }
 </style>

@@ -93,6 +93,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       value: JSON.stringify({
         selection: selection,
         isValidStyle: checkSelectionIsValidStyle(selection),
+        stylesUsed: findStylesUsed(this.styleList, selection).map(item => `${item.rootStyleName}.${item.name}`),
       }),
     });
   }
