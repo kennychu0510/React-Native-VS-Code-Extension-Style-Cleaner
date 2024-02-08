@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.3] - 2024-02-08
+- Added used styles highlight in extension webview from selection
+- Added settings for configuring webview colors
+- Added refresh button animation
+
 ## [1.0.2] - 2024-02-07
 - Fix bug for extracting multi-line selection of inline style
 
