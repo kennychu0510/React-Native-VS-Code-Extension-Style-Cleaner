@@ -348,11 +348,11 @@ suite('RN Styles Cleaner', () => {
     assert.strictEqual(currentFile, afterFile);
   });
 
-  test('Extract styles - Scenario 6: No active editor', async () => {
+  test('Remove Unused Styles - Scenario 6: No active editor', async () => {
     showErrorMessageSpy.resetHistory();
     // close all editor windows
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-
+    await sleep();
     await vscode.commands.executeCommand('RNStylesCleaner.removeUnusedStyles');
 
     assert.strictEqual(showErrorMessageSpy.calledOnce, true);

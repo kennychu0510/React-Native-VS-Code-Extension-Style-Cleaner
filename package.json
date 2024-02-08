@@ -51,6 +51,10 @@
       {
         "command": "RNStylesCleaner.copyStylesFromSelection",
         "title": "RN Styles Cleaner: Copy styles from selection"
+      },
+      {
+        "command": "RNStylesCleaner.cleanStylesForFolder",
+        "title": "RN Styles Cleaner: Clean unused styles for folder"
       }
     ],
     "configuration": {

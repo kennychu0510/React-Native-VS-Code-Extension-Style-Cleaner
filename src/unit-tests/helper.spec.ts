@@ -1,7 +1,7 @@
 import { expect, test, describe } from 'vitest';
-import { checkSelectionIsValidStyle, findStylesUsed, getStyles, parseStyleFromArrayToList, formatStyleForPasting, getStyleContents } from '../helper';
+import { checkSelectionIsValidStyle, findStylesUsed, getStyles, parseStyleFromArrayToList, formatStyleForPasting, getStyleContents, findFiles } from '../helper';
 import fs from 'fs';
-import path from 'path'
+import path from 'path';
 
 const __dirname = path.resolve();
 const folderDirectory = path.join(__dirname, 'src', 'unit-tests');
@@ -143,10 +143,10 @@ const file4 = () => {
     `;
     const stylesUsed = findStylesUsed(styleList, selection);
     expect(stylesUsed.length).toBe(2);
-    expect(stylesUsed.find(item => item.rootStyleName === 'componentStyle')).toBeDefined();
-    expect(stylesUsed.find(item => item.name === 'componentContainer')).toBeDefined();
-    expect(stylesUsed.find(item => item.rootStyleName === 'styles')).toBeDefined();
-    expect(stylesUsed.find(item => item.name === 'text')).toBeDefined();
+    expect(stylesUsed.find((item) => item.rootStyleName === 'componentStyle')).toBeDefined();
+    expect(stylesUsed.find((item) => item.name === 'componentContainer')).toBeDefined();
+    expect(stylesUsed.find((item) => item.rootStyleName === 'styles')).toBeDefined();
+    expect(stylesUsed.find((item) => item.name === 'text')).toBeDefined();
   });
 });
 
@@ -183,7 +183,6 @@ describe('getStyleContents', () => {
   test('1 style', () => {
     const selection = `style={{ flex: 1 }}`;
     const styleForPasting = getStyleContents(selection);
-    console.log(styleForPasting)
     expect(styleForPasting).toEqual(['flex: 1']);
   });
 
@@ -205,6 +204,35 @@ describe('getStyleContents', () => {
       'transform: [{scaleX: 2, scaleY: 4}]'
     }}}`;
     const styleForPasting = getStyleContents(selection);
-    expect(styleForPasting).toEqual(['flex: 1', "backgroundColor: 'red'",  "'transform: [{scaleX: 2, scaleY: 4}]'}"]);
+    expect(styleForPasting).toEqual(['flex: 1', "backgroundColor: 'red'", "'transform: [{scaleX: 2, scaleY: 4}]'}"]);
+  });
+
+  describe('findFiles', () => {
+    test('find all files in directory - no nested', () => {
+      const folderPath = path.join(__dirname, 'src', 'test', 'resources', 'batch-clean');
+      const files = findFiles(folderPath);
+      expect(files.length).toBe(4);
+    });
+
+    test('find all files in directory - nested', () => {
+      const folderPath = path.join(__dirname, 'src', 'test', 'resources', 'batch-clean-nested');
+      const files = findFiles(folderPath);
+      expect(files.length).toBe(8);
+    });
+  });
+
+  describe('get styles used given a file', () => {
+    test('before.js', () => {
+      const filePath = path.join(__dirname, 'src', 'test', 'resources', 'batch-clean', 'before', 'file1.js');
+      const fileContent = fs.readFileSync(filePath, {
+        encoding: 'utf-8',
+      });
+      const stylesRaw = getStyles(fileContent);
+      const styleList = parseStyleFromArrayToList(stylesRaw);
+      expect(styleList.length).toBeGreaterThan(0);
+      console.log(styleList)
+      expect(styleList[0].rootName).toBe('styles');
+    })
+  
   });
 });

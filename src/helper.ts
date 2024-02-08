@@ -2,6 +2,8 @@ import { parse } from '@babel/parser';
 import { SourceLocation, ObjectProperty } from '@babel/types';
 import * as _ from 'lodash';
 import { ParsedStyle, StyleDetail, StyleUsed } from './model';
+import * as fs from 'fs'
+import * as path from 'path'
 
 
 
@@ -225,4 +227,27 @@ export function isValidObjectKey(str: string) {
     return false;
   }
   return true;
+}
+
+export function findFiles(directory: string) {
+  const fileExtensions = ['.js', '.jsx', '.tsx'];
+  const foundFiles: string[] = [];
+
+  function traverseDirectory(currentPath: string) {
+    const files = fs.readdirSync(currentPath);
+
+    files.forEach(file => {
+      const filePath = path.join(currentPath, file);
+      const fileStat = fs.statSync(filePath);
+
+      if (fileStat.isDirectory()) {
+        traverseDirectory(filePath); // Recursively traverse nested directories
+      } else if (fileExtensions.includes(path.extname(file))) {
+        foundFiles.push(filePath);
+      }
+    });
+  }
+
+  traverseDirectory(directory);
+  return foundFiles;
 }

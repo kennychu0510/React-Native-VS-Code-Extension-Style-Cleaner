@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
-import { checkSelectionIsValidStyle, findStylesUsed, formatStyleForPasting, getStyles, isValidObjectKey, parseStyleFromArrayToList } from './helper';
+import { checkSelectionIsValidStyle, findFiles, findStylesUsed, formatStyleForPasting, getStyles, isValidObjectKey, parseStyleFromArrayToList } from './helper';
 import * as _ from 'lodash';
 import { ExtensionConfig, ParsedStyle } from './model';
+
+const fileExtensions = ['.js', '.jsx', '.tsx'];
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
@@ -38,7 +40,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         }
 
         case 'onDelete': {
-          this.handleRemoveUnusedStyles();
+          if (!this._editor) {
+            return;
+          }
+          this.handleRemoveUnusedStyles(this._editor, this.styleList);
           break;
         }
         case 'onClickStyle': {
@@ -82,6 +87,23 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         }
       }
     });
+  }
+
+  public async handleCleanStylesForFolder(selectedDir: vscode.Uri | undefined) {
+    if (!selectedDir) {
+      vscode.window.showErrorMessage('No directory selected');
+      return;
+    }
+
+    const folderPath = selectedDir.fsPath;
+    const reactFiles = findFiles(folderPath);
+
+    if (reactFiles.length === 0) {
+      vscode.window.showErrorMessage('No related files found');
+      return;
+    }
+
+
   }
 
   private getLocationOfStyleSheetObject(style: ReturnType<typeof parseStyleFromArrayToList>[0]): number {
@@ -214,19 +236,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  public async handleRemoveUnusedStyles() {
-    let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      vscode.window.showErrorMessage('No active text editor');
-      return;
-    }
-
-    if (this.styleList.length === 0) {
-      vscode.window.showErrorMessage('Nothing to delete');
-      return;
-    }
-
-    const stylesToDelete = _.flatMap(this.styleList.map((item) => item.styles)).filter((item) => item.usage === 0);
+  public async handleRemoveUnusedStyles(editor: vscode.TextEditor, styleList: ParsedStyle[]) {
+    const stylesToDelete = _.flatMap(styleList.map((item) => item.styles)).filter((item) => item.usage === 0);
 
     editor.edit((edit) => {
       for (let styleToDelete of stylesToDelete) {

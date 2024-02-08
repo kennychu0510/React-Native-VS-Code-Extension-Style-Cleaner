@@ -9,10 +9,8 @@ export function activate(context: vscode.ExtensionContext) {
   const subscriptions = [
     vscode.window.registerWebviewViewProvider('RNStylesCleaner-sidebar', sidebarProvider),
     vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor) {
-        sidebarProvider._editor = editor;
-        sidebarProvider.getStyles();
-      }
+      sidebarProvider._editor = editor;
+      sidebarProvider.getStyles();
     }),
     vscode.workspace.onDidSaveTextDocument((event) => {
       sidebarProvider.getStyles();
@@ -35,7 +33,15 @@ export function activate(context: vscode.ExtensionContext) {
       sidebarProvider.handleExtractSelectionIntoStyleSheet(newStyleName, rootStyle);
     }),
     vscode.commands.registerCommand('RNStylesCleaner.removeUnusedStyles', () => {
-      sidebarProvider.handleRemoveUnusedStyles();
+      if (!sidebarProvider._editor) {
+        vscode.window.showErrorMessage('No active text editor');
+        return;
+      }
+      if (sidebarProvider.styleList.length === 0) {
+        vscode.window.showErrorMessage('No styles found');
+        return;
+      }
+      sidebarProvider.handleRemoveUnusedStyles(sidebarProvider._editor, sidebarProvider.styleList);
     }),
     vscode.commands.registerCommand('RNStylesCleaner.copyStylesFromSelection', () => {
       sidebarProvider.handleCopyStylesFromSelection();
@@ -45,10 +51,12 @@ export function activate(context: vscode.ExtensionContext) {
         sidebarProvider.updateExtensionConfig();
       }
     }),
+    vscode.commands.registerCommand('RNStylesCleaner.cleanStylesForFolder', (selectedDir: vscode.Uri | undefined) => {
+      sidebarProvider.handleCleanStylesForFolder(selectedDir);
+    }),
   ];
   subscriptions.forEach((item) => context.subscriptions.push(item));
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
-
