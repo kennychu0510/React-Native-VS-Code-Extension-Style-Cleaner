@@ -3,10 +3,13 @@
 
   type StyleDetail = {
     rootName: string;
-    styles: any;
+    styles: {
+      name: string;
+      usage: number;
+      details: { item: any };
+    }[];
     location: any;
     styleType: 'normal' | 'arrow';
-    inSelection?: boolean;
   };
 
   let styleList: StyleDetail[] = [];

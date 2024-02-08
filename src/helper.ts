@@ -108,7 +108,7 @@ export function parseStyleFromArrayToList(stylesRaw: StyleDetail[]): ParsedStyle
   return styleList;
 }
 
-export function findStylesUsed(styleList: ParsedStyle[], text: string): StyleUsed[] {
+export function findStylesUsed(styleList: ParsedStyle[], selection: string): StyleUsed[] {
   const stylesUsed = [];
   for (let i = 0; i < styleList.length; i++) {
     const styleObj = styleList[i];
@@ -120,10 +120,11 @@ export function findStylesUsed(styleList: ParsedStyle[], text: string): StyleUse
         styleToMatch = `${styleObj.rootName}(.+).${name}`;
       }
       const regex = new RegExp(styleToMatch, 'g');
-      const matches = text.match(regex);
+      const matches = selection.match(regex);
       const isUsed = matches;
       if (isUsed) {
         stylesUsed.push({
+          rootStyleName: styleObj.rootName,
           name: name,
           loc: styleList[i].styles[j].details.item.loc,
         });

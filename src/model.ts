@@ -21,6 +21,7 @@ export type ParsedStyle = {
 };
 
 export type StyleUsed = {
+  rootStyleName: string;
   name: string;
   loc: SourceLocation | null | undefined;
 };

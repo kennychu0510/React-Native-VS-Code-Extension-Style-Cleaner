@@ -110,8 +110,43 @@ describe('findStylesUsed', () => {
     const stylesUsed = findStylesUsed(styleList, selection);
     const containerStyleIsUsed = stylesUsed.find((item) => item.name === 'container');
     const textStyleIsUsed = stylesUsed.find((item) => item.name === 'text');
+    const rootStyle = stylesUsed.every((item) => item.rootStyleName === 'styles');
     expect(containerStyleIsUsed).toBeDefined();
     expect(textStyleIsUsed).toBeDefined();
+    expect(rootStyle).toBe(true);
+  });
+
+  test('Case 2', () => {
+    const text = fs.readFileSync(path.join(folderDirectory, 'file4.js'), {
+      encoding: 'utf-8',
+    });
+    const result = getStyles(text);
+    const styleList = parseStyleFromArrayToList(result);
+    const selection = `
+    const Component = () => {
+  return (
+    <View style={componentStyle.componentContainer}>
+      <Text>file</Text>
+    </View>
+  )
+}
+
+
+const file4 = () => {
+  return (
+    <View >
+      <Text style={styles(WIDTH).text}>file</Text>
+      <Component/>
+    </View>
+  )
+}
+    `;
+    const stylesUsed = findStylesUsed(styleList, selection);
+    expect(stylesUsed.length).toBe(2);
+    expect(stylesUsed.find(item => item.rootStyleName === 'componentStyle')).toBeDefined();
+    expect(stylesUsed.find(item => item.name === 'componentContainer')).toBeDefined();
+    expect(stylesUsed.find(item => item.rootStyleName === 'styles')).toBeDefined();
+    expect(stylesUsed.find(item => item.name === 'text')).toBeDefined();
   });
 });
 
@@ -163,12 +198,13 @@ describe('getStyleContents', () => {
     const styleForPasting = getStyleContents(selection);
     expect(styleForPasting).toEqual(['flex: 1', 'transform: [{scaleX: 2, scaleY: 4}]']);
   });
-  test('nested style', () => {
+  test('nested style in multi-line', () => {
     const selection = `style={{
       flex: 1,
       backgroundColor: 'red',
+      'transform: [{scaleX: 2, scaleY: 4}]'
     }}}`;
     const styleForPasting = getStyleContents(selection);
-    expect(styleForPasting).toEqual(['flex: 1', "backgroundColor: 'red'"]);
+    expect(styleForPasting).toEqual(['flex: 1', "backgroundColor: 'red'",  "'transform: [{scaleX: 2, scaleY: 4}]'}"]);
   });
 });
