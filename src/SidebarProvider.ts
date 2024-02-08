@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { checkSelectionIsValidStyle, findStylesUsed, formatStyleForPasting, getStyles, isValidObjectKey, parseStyleFromArrayToList } from './helper';
 import * as _ from 'lodash';
-import { ParsedStyle } from './model';
+import { ExtensionConfig, ParsedStyle } from './model';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
@@ -9,10 +9,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   _editor?: vscode.TextEditor;
   selection: string;
   styleList: ReturnType<typeof parseStyleFromArrayToList> = [];
+  _config: ExtensionConfig;
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     this._editor = vscode.window.activeTextEditor;
     this.selection = '';
+    this._config = getExtensionConfig();
   }
 
   public resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -125,6 +127,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         value: JSON.stringify([]),
       });
     }
+  }
+
+  public updateExtensionConfig() {
+    this._config = getExtensionConfig();
+    this._view?.webview.postMessage({
+      type: 'onReceiveConfig',
+      value: JSON.stringify(this._config),
+    });
   }
 
   public async handleExtractSelectionIntoStyleSheet(newStyleName?: string, rootStyleName = '') {
@@ -344,4 +354,13 @@ function getNonce() {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
+}
+
+export function getExtensionConfig(): ExtensionConfig {
+  const config = vscode.workspace.getConfiguration('RNStylesCleaner');
+  return {
+    highlightColor: config.get('highlightColor') ?? '#FFFF00',
+    unusedStyleColor: config.get('unusedStyleColor') ?? '#eb173a',
+    usedStyleColor: config.get('usedStyleColor') ?? '#4daafc',
+  }
 }

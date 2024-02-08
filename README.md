@@ -5,6 +5,7 @@
 - Remove all unused styles with a button press
 - Extract all the styles defined in the file
 - Copy styles from selection, helps for refactoring code and when moving components to different files
+- Quickly extract selected inline styles into stylesheet object
 
 **Sample**
 <br>

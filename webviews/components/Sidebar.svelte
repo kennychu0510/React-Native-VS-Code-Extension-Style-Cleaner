@@ -18,7 +18,12 @@
   $: unusedStyles = getUnusedStyles(styleList);
   $: isValidStyleSelection = false;
   $: stylesUsed = defaultUsedStyles;
-
+  $: config = {
+    highlightColor: '#FFFF00',
+    usedStyleColor: '#4daafc',
+    unusedStyleColor: '#eb173a',
+  };
+  $: cssVarStyles = `--highlight-color: ${config.highlightColor}; --used-style-color: ${config.usedStyleColor}; --unused-style-color: ${config.unusedStyleColor};`;
   /* Elements */
   let refreshButton: HTMLDivElement;
 
@@ -90,6 +95,12 @@
             styles: rootStyle.styles.filter((style: any) => style.usage !== 0),
           }));
           styleList = styleList.filter((item) => item.styles.length > 0);
+          break;
+        }
+        case 'onReceiveConfig': {
+          const result = JSON.parse(message.value);
+          config = result;
+          break;
         }
       }
     });
@@ -98,93 +109,95 @@
   });
 </script>
 
-<div class="headerContainer">
-  <h1>Styles Cleaner</h1>
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="refresh" on:click={fetchStyles} bind:this={refreshButton}>
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      xmlns:xlink="http://www.w3.org/1999/xlink"
-      fill="#FFF"
-      height="15px"
-      width="15px"
-      version="1.1"
-      id="Capa_1"
-      viewBox="0 0 489.645 489.645"
-      xml:space="preserve"
-    >
-      <g>
-        <path
-          d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3   c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5   c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8   c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2   C414.856,432.511,548.256,314.811,460.656,132.911z"
-        />
-      </g>
-    </svg>
+<div style={cssVarStyles}>
+  <div class="headerContainer">
+    <h1>Styles Cleaner</h1>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div class="refresh" on:click={fetchStyles} bind:this={refreshButton}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        fill="#FFF"
+        height="15px"
+        width="15px"
+        version="1.1"
+        id="Capa_1"
+        viewBox="0 0 489.645 489.645"
+        xml:space="preserve"
+      >
+        <g>
+          <path
+            d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3   c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5   c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8   c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2   C414.856,432.511,548.256,314.811,460.656,132.911z"
+          />
+        </g>
+      </svg>
+    </div>
   </div>
-</div>
-{#if styleList.length > 0}
-  <table style="width: 100%;">
-    <tr>
-      <th style="width:80%; text-align: left;">Unused Styles:</th>
-      <th>{unusedStyles.length}</th>
-    </tr>
-  </table>
-
-  <table style="width: 100%;">
-    <tr>
-      <th style="width:80%; text-align: left" class="header-label">Name</th>
-      <th>Usage</th>
-    </tr>
-    {#each styleList as item}
-      <tr><td colspan="2" /></tr>
+  {#if styleList.length > 0}
+    <table style="width: 100%;">
       <tr>
-        <td colspan="2" class="root-name">{item.rootName}</td>
+        <th style="width:80%; text-align: left;">Unused Styles:</th>
+        <th>{unusedStyles.length}</th>
       </tr>
-      {#each item.styles as style}
-        <tr>
-          <td style="text-align: left">
-            {#if style.usage === 0}
-              <!-- svelte-ignore a11y-invalid-attribute -->
-              <a href="" class="unused" on:click={() => goToLocation(style)}>
-                {style.name}
-              </a>
-            {:else}
-              <!-- svelte-ignore a11y-invalid-attribute -->
-              <div class="styleKey">
-                {#if stylesUsed.includes(`${item.rootName}.${style.name}`)}
-                  <a href="" class="highlighted" on:click={() => goToLocation(style)}>
-                    {style.name}
-                  </a>
-                {:else}
-                  <a href="" on:click={() => goToLocation(style)}>
-                    {style.name}
-                  </a>
-                {/if}
-              </div>
-            {/if}
-          </td>
-          <td style="text-align: center">
-            {style.usage}
-          </td>
-        </tr>
-      {/each}
-    {/each}
-  </table>
+    </table>
 
+    <table style="width: 100%;">
+      <tr>
+        <th style="width:80%; text-align: left" class="header-label">Name</th>
+        <th>Usage</th>
+      </tr>
+      {#each styleList as item}
+        <tr><td colspan="2" /></tr>
+        <tr>
+          <td colspan="2" class="root-name">{item.rootName}</td>
+        </tr>
+        {#each item.styles as style}
+          <tr>
+            <td style="text-align: left">
+              {#if style.usage === 0}
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a href="" class="unused" on:click={() => goToLocation(style)}>
+                  {style.name}
+                </a>
+              {:else}
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <div class="styleKey">
+                  {#if stylesUsed.includes(`${item.rootName}.${style.name}`)}
+                    <a href="" class="used-style highlighted" on:click={() => goToLocation(style)}>
+                      {style.name}
+                    </a>
+                  {:else}
+                    <a href="" class="used-style" on:click={() => goToLocation(style)}>
+                      {style.name}
+                    </a>
+                  {/if}
+                </div>
+              {/if}
+            </td>
+            <td style="text-align: center">
+              {style.usage}
+            </td>
+          </tr>
+        {/each}
+      {/each}
+    </table>
+
+    <div class="button-container">
+      {#if unusedStyles.length > 0}
+        <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
+      {/if}
+      {#if selection && stylesUsed.length > 0}
+        <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
+      {/if}
+    </div>
+  {:else}
+    <p>No Styles Detected</p>
+  {/if}
   <div class="button-container">
-    {#if unusedStyles.length > 0}
-      <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
-    {/if}
-    {#if selection && stylesUsed.length > 0}
-      <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
+    {#if isValidStyleSelection}
+      <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
     {/if}
   </div>
-{:else}
-  <p>No Styles Detected</p>
-{/if}
-<div class="button-container">
-  {#if isValidStyleSelection}
-    <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
-  {/if}
 </div>
 
 <style global>
@@ -215,7 +228,7 @@
     animation: rotateAnimation 1s ease forwards;
   }
   .unused {
-    color: rgb(235, 23, 58);
+    color: var(--unused-style-color);
   }
 
   .root-name {
@@ -223,7 +236,11 @@
   }
 
   .highlighted {
-    background-color: yellow;
+    background-color: var(--highlight-color);
+  }
+
+  .used-style {
+    color: var(--used-style-color);
   }
 
   button {

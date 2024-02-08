@@ -52,7 +52,32 @@
         "command": "RNStylesCleaner.copyStylesFromSelection",
         "title": "RN Styles Cleaner: Copy styles from selection"
       }
-    ]
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "RN Styles Cleaner",
+      "properties": {
+        "RNStylesCleaner.usedStyleColor": {
+          "type": "string",
+          "description": "Color of used style",
+          "default": "#4daafc",
+          "order": 1
+        },
+        "RNStylesCleaner.unusedStyleColor": {
+          "type": "string",
+          "description": "Color of unused style",
+          "default": "#eb173a",
+          "order": 2
+        },
+        "RNStylesCleaner.styleHighlightColor": {
+          "type": "string",
+          "description": "Highlight color of used style in selection",
+          "default": "#FFFF00",
+          "order": 3
+        }
+       
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npx vitest run && npm run test && npm run package",

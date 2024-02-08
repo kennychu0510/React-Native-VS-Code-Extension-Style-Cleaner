@@ -40,9 +40,15 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('RNStylesCleaner.copyStylesFromSelection', () => {
       sidebarProvider.handleCopyStylesFromSelection();
     }),
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('RNStylesCleaner')) {
+        sidebarProvider.updateExtensionConfig();
+      }
+    }),
   ];
   subscriptions.forEach((item) => context.subscriptions.push(item));
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
+

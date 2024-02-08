@@ -25,3 +25,9 @@ export type StyleUsed = {
   name: string;
   loc: SourceLocation | null | undefined;
 };
+
+export type ExtensionConfig = {
+  highlightColor: string;
+  usedStyleColor: string;
+  unusedStyleColor: string;
+}
