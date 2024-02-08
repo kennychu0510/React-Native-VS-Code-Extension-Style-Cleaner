@@ -13,7 +13,7 @@
   };
 
   let styleList: StyleDetail[] = [];
-  const defaultUsedStyles: string[] = []
+  const defaultUsedStyles: string[] = [];
   $: selection = '';
   $: unusedStyles = getUnusedStyles(styleList);
   $: isValidStyleSelection = false;
@@ -44,7 +44,7 @@
     tsvscode.postMessage({ type: 'onFetchStyles', value: '' });
     setTimeout(() => {
       refreshButton.classList.remove('rotate');
-  }, 1000);
+    }, 1000);
   }
 
   function deleteUnusedStyles() {
@@ -149,15 +149,17 @@
               </a>
             {:else}
               <!-- svelte-ignore a11y-invalid-attribute -->
-              {#if stylesUsed.includes(`${item.rootName}.${style.name}`)}
-                <a href="" class="highlighted" on:click={() => goToLocation(style)}>
-                  {style.name}
-                </a>
-              {:else}
-                <a href="" on:click={() => goToLocation(style)}>
-                  {style.name}
-                </a>
-              {/if}
+              <div class="styleKey">
+                {#if stylesUsed.includes(`${item.rootName}.${style.name}`)}
+                  <a href="" class="highlighted" on:click={() => goToLocation(style)}>
+                    {style.name}
+                  </a>
+                {:else}
+                  <a href="" on:click={() => goToLocation(style)}>
+                    {style.name}
+                  </a>
+                {/if}
+              </div>
             {/if}
           </td>
           <td style="text-align: center">
@@ -168,18 +170,22 @@
     {/each}
   </table>
 
-  {#if unusedStyles.length > 0}
-    <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
-  {/if}
-  {#if selection}
-    <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
-  {/if}
+  <div class="button-container">
+    {#if unusedStyles.length > 0}
+      <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
+    {/if}
+    {#if selection && stylesUsed.length > 0}
+      <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
+    {/if}
+  </div>
 {:else}
   <p>No Styles Detected</p>
 {/if}
-{#if isValidStyleSelection}
-  <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
-{/if}
+<div class="button-container">
+  {#if isValidStyleSelection}
+    <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
+  {/if}
+</div>
 
 <style global>
   .headerContainer {
@@ -218,5 +224,20 @@
 
   .highlighted {
     background-color: yellow;
+  }
+
+  button {
+    max-width: 500px;
+  }
+
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .styleKey {
+    margin-left: 5px;
   }
 </style>
