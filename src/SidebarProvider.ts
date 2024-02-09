@@ -103,7 +103,22 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       return;
     }
 
+    let cleanedUpFiles = 0;
 
+    for (let file of reactFiles) {
+      const doc = await vscode.workspace.openTextDocument(file);
+      const editor = await vscode.window.showTextDocument(doc);
+      const text = doc.getText();
+      const stylesRaw = getStyles(text);
+      const styleList = parseStyleFromArrayToList(stylesRaw);
+      const stylesDeleted = await this.handleRemoveUnusedStyles(editor, styleList, true);
+      if (stylesDeleted > 0) {
+        cleanedUpFiles++;
+      }
+      await editor.document.save();
+      vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+    }
+    vscode.window.showInformationMessage(`${cleanedUpFiles} file${cleanedUpFiles > 1 ? 's' : ''} cleaned up!`);
   }
 
   private getLocationOfStyleSheetObject(style: ReturnType<typeof parseStyleFromArrayToList>[0]): number {
@@ -236,7 +251,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  public async handleRemoveUnusedStyles(editor: vscode.TextEditor, styleList: ParsedStyle[]) {
+  public async handleRemoveUnusedStyles(editor: vscode.TextEditor, styleList: ParsedStyle[], hideDeletedStylesInfoPrompt?: boolean): Promise<number> {
     const stylesToDelete = _.flatMap(styleList.map((item) => item.styles)).filter((item) => item.usage === 0);
 
     editor.edit((edit) => {
@@ -247,13 +262,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         edit.delete(location);
       }
     });
-    vscode.window.showInformationMessage(`${stylesToDelete.length} style${stylesToDelete.length > 1 ? 's' : ''} deleted successfully!`);
+    if (!hideDeletedStylesInfoPrompt) {
+      vscode.window.showInformationMessage(`${stylesToDelete.length} style${stylesToDelete.length > 1 ? 's' : ''} deleted successfully!`);
+    }
 
     // update UI styles
     this._view?.webview.postMessage({
       type: 'removeUnusedStylesSuccess',
       value: '',
     });
+
+    return stylesToDelete.length;
   }
 
   private async handleExtractStylesIntoStylesheet({

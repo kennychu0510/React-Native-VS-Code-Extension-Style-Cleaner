@@ -9,6 +9,7 @@ const features = {
   styleExtraction: 'styles-extraction',
   copyStyles: 'copy-styles',
   removeStyles: 'remove-styles',
+  batchClean: 'batchClean',
 } as const;
 
 // get current working folder path
@@ -86,7 +87,6 @@ suite('RN Styles Cleaner', () => {
     await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet');
 
     assert.strictEqual(showErrorMessageSpy.calledOnce, true);
-    
   });
 
   test('Extract styles - Scenario 4: Selected style is multi-line', async () => {
@@ -356,7 +356,6 @@ suite('RN Styles Cleaner', () => {
     await vscode.commands.executeCommand('RNStylesCleaner.removeUnusedStyles');
 
     assert.strictEqual(showErrorMessageSpy.calledOnce, true);
-    
   });
 
   /* Copy styles from selection */
@@ -465,6 +464,30 @@ suite('RN Styles Cleaner', () => {
 
     assert.strictEqual(currentFile, afterFile);
   });
+
+  test('Batch clean - Scenario 1: No nested files', async () => {
+    showErrorMessageSpy.resetHistory();
+    const scenario = 'batch-clean';
+
+    const workingDirPath = path.join(workspaceFolder, features.batchClean, scenario, 'working');
+    // check if working dir exists
+    if (!fs.existsSync(workingDirPath)) {
+      fs.mkdirSync(workingDirPath);
+    }
+
+    const beforeDir = fs.readdirSync(path.join(workspaceFolder, features.batchClean, scenario, 'before'));
+    const afterDir = fs.readdirSync(path.join(workspaceFolder, features.batchClean, scenario, 'after'));
+    const workingDir = fs.readdirSync(path.join(workspaceFolder, features.batchClean, scenario, 'working'));
+
+    // clear all files inside working dir recursively
+    deleteFilesRecursively(workingDirPath);
+
+    beforeDir.forEach((file) => {
+      fs.copyFileSync(path.join(workspaceFolder, features.batchClean, scenario, 'before', file), path.join(workingDirPath, file));
+    });
+    
+
+  });
 });
 
 //sleep function
@@ -472,4 +495,19 @@ function sleep(ms?: number) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms ?? 200);
   });
+}
+
+function deleteFilesRecursively(dirPath: string) {
+  if (fs.existsSync(dirPath)) {
+    const files = fs.readdirSync(dirPath);
+    files.forEach((file) => {
+      const filePath = path.join(dirPath, file);
+      if (fs.lstatSync(filePath).isDirectory()) {
+        deleteFilesRecursively(filePath);
+      } else {
+        fs.unlinkSync(filePath);
+      }
+    });
+    fs.rmdirSync(dirPath);
+  }
 }

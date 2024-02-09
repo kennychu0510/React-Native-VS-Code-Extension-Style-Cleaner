@@ -57,6 +57,15 @@
         "title": "RN Styles Cleaner: Clean unused styles for folder"
       }
     ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "RNStylesCleaner.cleanStylesForFolder",
+          "group": "RNStylesCleaner",
+          "when": "explorerResourceIsFolder"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "RN Styles Cleaner",

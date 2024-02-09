@@ -230,9 +230,10 @@ describe('getStyleContents', () => {
       const stylesRaw = getStyles(fileContent);
       const styleList = parseStyleFromArrayToList(stylesRaw);
       expect(styleList.length).toBeGreaterThan(0);
-      console.log(styleList)
       expect(styleList[0].rootName).toBe('styles');
+      expect(styleList[0].styles.length).toBe(2);
+      expect(styleList[0].styles[0].name).toBe('container');
+      expect(styleList[0].styles[1].name).toBe('text');
     })
-  
   });
 });

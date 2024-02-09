@@ -1,5 +1,4 @@
 import { parse } from '@babel/parser';
-import { SourceLocation, ObjectProperty } from '@babel/types';
 import * as _ from 'lodash';
 import { ParsedStyle, StyleDetail, StyleUsed } from './model';
 import * as fs from 'fs'
@@ -95,7 +94,6 @@ export function parseStyleFromArrayToList(stylesRaw: StyleDetail[]): ParsedStyle
   const styleList: any = [];
   for (let i = 0; i < stylesRaw.length; i++) {
     const styleDetail: any = [];
-    // console.log(stylesRaw[i])
     for (let style in stylesRaw[i].styles) {
       styleDetail.push({
         name: style,
