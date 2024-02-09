@@ -211,13 +211,13 @@ describe('getStyleContents', () => {
     test('find all files in directory - no nested', () => {
       const folderPath = path.join(__dirname, 'src', 'test', 'resources', 'batch-clean');
       const files = findFiles(folderPath);
-      expect(files.length).toBe(4);
+      expect(files.length).toBe(6);
     });
 
     test('find all files in directory - nested', () => {
       const folderPath = path.join(__dirname, 'src', 'test', 'resources', 'batch-clean-nested');
       const files = findFiles(folderPath);
-      expect(files.length).toBe(8);
+      expect(files.length).toBe(12);
     });
   });
 

@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.0.4] - 2024-02-09
+- Added feature to batch clean unused styles for all files in selected folder
+
 ## [1.0.3] - 2024-02-08
 - Added used styles highlight in extension webview from selection
 - Added settings for configuring webview colors
