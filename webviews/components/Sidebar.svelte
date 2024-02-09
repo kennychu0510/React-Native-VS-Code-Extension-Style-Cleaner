@@ -57,7 +57,10 @@
   }
 
   function goToLocation(style: any) {
-    tsvscode.postMessage({ type: 'onClickStyle', value: JSON.stringify({ ...style.details.item.loc }) });
+    tsvscode.postMessage({
+      type: 'onClickStyle',
+      value: JSON.stringify({ ...style.details.item.loc }),
+    });
   }
 
   function copyStylesInSelection() {
@@ -141,7 +144,7 @@
       </tr>
     </table>
 
-    <table style="width: 100%;">
+    <table style="width: 100%; margin-bottom:10px">
       <tr>
         <th style="width:80%; text-align: left" class="header-label">Name</th>
         <th>Usage</th>
@@ -154,25 +157,37 @@
         {#each item.styles as style}
           <tr>
             <td style="text-align: left">
-              {#if style.usage === 0}
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href="" class="unused" on:click={() => goToLocation(style)}>
-                  {style.name}
-                </a>
-              {:else}
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <div class="styleKey">
+              <div class="styleKey">
+                {#if style.usage === 0}
+                  <!-- svelte-ignore a11y-invalid-attribute -->
+                  <a
+                    href=""
+                    class="unused"
+                    on:click={() => goToLocation(style)}
+                  >
+                    {style.name}
+                  </a>
+                {:else}
+                  <!-- svelte-ignore a11y-invalid-attribute -->
                   {#if stylesUsed.includes(`${item.rootName}.${style.name}`)}
-                    <a href="" class="used-style highlighted" on:click={() => goToLocation(style)}>
+                    <a
+                      href=""
+                      class="used-style highlighted"
+                      on:click={() => goToLocation(style)}
+                    >
                       {style.name}
                     </a>
                   {:else}
-                    <a href="" class="used-style" on:click={() => goToLocation(style)}>
+                    <a
+                      href=""
+                      class="used-style"
+                      on:click={() => goToLocation(style)}
+                    >
                       {style.name}
                     </a>
                   {/if}
-                </div>
-              {/if}
+                {/if}
+              </div>
             </td>
             <td style="text-align: center">
               {style.usage}
@@ -187,7 +202,9 @@
         <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
       {/if}
       {#if selection && stylesUsed.length > 0}
-        <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
+        <button on:click={copyStylesInSelection}
+          >Copy Styles in Selection</button
+        >
       {/if}
     </div>
   {:else}
@@ -195,7 +212,9 @@
   {/if}
   <div class="button-container">
     {#if isValidStyleSelection}
-      <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
+      <button on:click={extractStyleIntoStylesheet}
+        >Extract into Stylesheet</button
+      >
     {/if}
   </div>
 </div>
