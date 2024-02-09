@@ -1,9 +1,8 @@
 import * as assert from 'assert';
-import * as path from 'path';
 import * as fs from 'fs';
-import * as vscode from 'vscode';
+import * as path from 'path';
 import * as sinon from 'sinon';
-import * as mocha from 'mocha';
+import * as vscode from 'vscode';
 
 const features = {
   styleExtraction: 'styles-extraction',
@@ -13,7 +12,14 @@ const features = {
 } as const;
 
 // get current working folder path
-const workspaceFolder = path.join(__dirname, '..', '..', 'src', 'test', 'resources');
+const workspaceFolder = path.join(
+  __dirname,
+  '..',
+  '..',
+  'src',
+  'test',
+  'resources'
+);
 
 suite('RN Styles Cleaner', () => {
   const showErrorMessageSpy = sinon.spy(vscode.window, 'showErrorMessage');
@@ -21,9 +27,30 @@ suite('RN Styles Cleaner', () => {
   /* Styles Extraction */
   test('Extract styles - Scenario 1: Stylesheet contains at least one item', async () => {
     const scenario = 'one-style';
-    const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.styleExtraction,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'before.js'
+      ),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'after.js'
+      ),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -39,7 +66,10 @@ suite('RN Styles Cleaner', () => {
     vscode.window.activeTextEditor!.selection = selection;
     await sleep();
 
-    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', 'container');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.extractSelectionIntoStyleSheet',
+      'container'
+    );
 
     await vscode.commands.executeCommand('workbench.action.files.save');
 
@@ -51,9 +81,30 @@ suite('RN Styles Cleaner', () => {
 
   test('Extract styles - Scenario 2: No stylesheet', async () => {
     const scenario = 'no-style';
-    const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.styleExtraction,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'before.js'
+      ),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'after.js'
+      ),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -69,7 +120,10 @@ suite('RN Styles Cleaner', () => {
     vscode.window.activeTextEditor!.selection = selection;
     await sleep();
 
-    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', 'container');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.extractSelectionIntoStyleSheet',
+      'container'
+    );
 
     await vscode.commands.executeCommand('workbench.action.files.save');
 
@@ -84,7 +138,9 @@ suite('RN Styles Cleaner', () => {
     // close all editor windows
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
 
-    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.extractSelectionIntoStyleSheet'
+    );
 
     assert.strictEqual(showErrorMessageSpy.calledOnce, true);
   });
@@ -92,9 +148,30 @@ suite('RN Styles Cleaner', () => {
   test('Extract styles - Scenario 4: Selected style is multi-line', async () => {
     const scenario = 'multi-line-selection';
 
-    const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.styleExtraction,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'before.js'
+      ),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'after.js'
+      ),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -111,7 +188,10 @@ suite('RN Styles Cleaner', () => {
 
     await sleep();
 
-    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', 'container');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.extractSelectionIntoStyleSheet',
+      'container'
+    );
 
     await vscode.commands.executeCommand('workbench.action.files.save');
 
@@ -125,9 +205,30 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'invalid-style';
 
-    const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.styleExtraction,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'before.js'
+      ),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'after.js'
+      ),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -143,7 +244,9 @@ suite('RN Styles Cleaner', () => {
     vscode.window.activeTextEditor!.selection = selection;
     await sleep();
 
-    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.extractSelectionIntoStyleSheet'
+    );
 
     assert.strictEqual(showErrorMessageSpy.calledOnce, true);
 
@@ -156,9 +259,30 @@ suite('RN Styles Cleaner', () => {
   test('Extract styles - Scenario 6: More than 1 root style ', async () => {
     const scenario = 'extract-multiple-root-styles';
 
-    const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.styleExtraction,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'before.js'
+      ),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'after.js'
+      ),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -175,7 +299,11 @@ suite('RN Styles Cleaner', () => {
 
     await sleep();
 
-    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', 'text', 'stylesB');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.extractSelectionIntoStyleSheet',
+      'text',
+      'stylesB'
+    );
 
     await vscode.commands.executeCommand('workbench.action.files.save');
 
@@ -188,9 +316,30 @@ suite('RN Styles Cleaner', () => {
   test('Extract styles - Scenario 7: 1 root style with 0 styles', async () => {
     const scenario = 'one-empty-style';
 
-    const filePath = path.join(workspaceFolder, features.styleExtraction, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.styleExtraction, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.styleExtraction,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'before.js'
+      ),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(
+        workspaceFolder,
+        features.styleExtraction,
+        scenario,
+        'after.js'
+      ),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -208,7 +357,10 @@ suite('RN Styles Cleaner', () => {
 
     await sleep();
 
-    await vscode.commands.executeCommand('RNStylesCleaner.extractSelectionIntoStyleSheet', 'container');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.extractSelectionIntoStyleSheet',
+      'container'
+    );
 
     await vscode.commands.executeCommand('workbench.action.files.save');
 
@@ -223,9 +375,20 @@ suite('RN Styles Cleaner', () => {
   test('Remove Unused Styles - Scenario 1: Clean unused style when there is 1 root style', async () => {
     const scenario = 'clean-style-1';
 
-    const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.removeStyles,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -248,9 +411,20 @@ suite('RN Styles Cleaner', () => {
   test('Remove Unused Styles - Scenario 2: Clean unused style when there is no unused style', async () => {
     const scenario = 'clean-style-no-unused';
 
-    const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.removeStyles,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -273,9 +447,20 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-no-styles';
 
-    const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.removeStyles,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -300,9 +485,20 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-2';
 
-    const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.removeStyles,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -326,9 +522,20 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'clean-style-multiple';
 
-    const filePath = path.join(workspaceFolder, features.removeStyles, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.removeStyles,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'before.js'),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(workspaceFolder, features.removeStyles, scenario, 'after.js'),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -365,9 +572,20 @@ suite('RN Styles Cleaner', () => {
 
     const scenario = 'copy-styles-no-selection';
 
-    const filePath = path.join(workspaceFolder, features.copyStyles, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.copyStyles,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(workspaceFolder, features.copyStyles, scenario, 'after.js'),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -378,7 +596,9 @@ suite('RN Styles Cleaner', () => {
     const document = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(document);
     await sleep();
-    await vscode.commands.executeCommand('RNStylesCleaner.copyStylesFromSelection');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.copyStylesFromSelection'
+    );
 
     assert.strictEqual(showErrorMessageSpy.calledOnce, true);
 
@@ -392,7 +612,9 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
 
-    await vscode.commands.executeCommand('RNStylesCleaner.copyStylesFromSelection');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.copyStylesFromSelection'
+    );
 
     assert.strictEqual(showErrorMessageSpy.calledOnce, true);
   });
@@ -400,9 +622,20 @@ suite('RN Styles Cleaner', () => {
   test('Copy Styles From Selection - Scenario 3: When selected one style in one line', async () => {
     const scenario = 'copy-styles-one-line';
 
-    const filePath = path.join(workspaceFolder, features.copyStyles, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.copyStyles,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(workspaceFolder, features.copyStyles, scenario, 'after.js'),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -419,7 +652,9 @@ suite('RN Styles Cleaner', () => {
     vscode.window.activeTextEditor!.selection = selection;
     await sleep();
 
-    await vscode.commands.executeCommand('RNStylesCleaner.copyStylesFromSelection');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.copyStylesFromSelection'
+    );
 
     await sleep();
 
@@ -436,9 +671,20 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'no-styles';
 
-    const filePath = path.join(workspaceFolder, features.copyStyles, scenario, 'working.js');
-    const beforeFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'), 'utf8');
-    const afterFile = fs.readFileSync(path.join(workspaceFolder, features.copyStyles, scenario, 'after.js'), 'utf8');
+    const filePath = path.join(
+      workspaceFolder,
+      features.copyStyles,
+      scenario,
+      'working.js'
+    );
+    const beforeFile = fs.readFileSync(
+      path.join(workspaceFolder, features.copyStyles, scenario, 'before.js'),
+      'utf8'
+    );
+    const afterFile = fs.readFileSync(
+      path.join(workspaceFolder, features.copyStyles, scenario, 'after.js'),
+      'utf8'
+    );
 
     // create new file for testing
     fs.writeFileSync(filePath, beforeFile, 'utf8');
@@ -455,7 +701,9 @@ suite('RN Styles Cleaner', () => {
     vscode.window.activeTextEditor!.selection = selection;
     await sleep();
 
-    await vscode.commands.executeCommand('RNStylesCleaner.copyStylesFromSelection');
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.copyStylesFromSelection'
+    );
 
     assert.strictEqual(showErrorMessageSpy.calledOnce, true);
 
@@ -469,24 +717,56 @@ suite('RN Styles Cleaner', () => {
     showErrorMessageSpy.resetHistory();
     const scenario = 'batch-clean';
 
-    const workingDirPath = path.join(workspaceFolder, features.batchClean, scenario, 'working');
     // check if working dir exists
-    if (!fs.existsSync(workingDirPath)) {
-      fs.mkdirSync(workingDirPath);
+    if (!fs.existsSync(path.join(workspaceFolder, scenario, 'working'))) {
+      fs.mkdirSync(path.join(workspaceFolder, scenario, 'working'));
     }
+    const workingDirPath = path.join(workspaceFolder, scenario, 'working');
 
-    const beforeDir = fs.readdirSync(path.join(workspaceFolder, features.batchClean, scenario, 'before'));
-    const afterDir = fs.readdirSync(path.join(workspaceFolder, features.batchClean, scenario, 'after'));
-    const workingDir = fs.readdirSync(path.join(workspaceFolder, features.batchClean, scenario, 'working'));
+    const beforeDir = fs.readdirSync(
+      path.join(workspaceFolder, scenario, 'before')
+    );
+    const workingDir = fs.readdirSync(
+      path.join(workspaceFolder, scenario, 'working')
+    );
 
     // clear all files inside working dir recursively
     deleteFilesRecursively(workingDirPath);
 
     beforeDir.forEach((file) => {
-      fs.copyFileSync(path.join(workspaceFolder, features.batchClean, scenario, 'before', file), path.join(workingDirPath, file));
+      fs.copyFileSync(
+        path.join(workspaceFolder, scenario, 'before', file),
+        path.join(workingDirPath, file)
+      );
     });
-    
 
+    // listen to changes to files inside working dir
+    const cleanFolderPromise = new Promise<void>((resolve, reject) => {
+      const watcher = vscode.workspace.createFileSystemWatcher(
+        path.join(workingDirPath, '**', '*')
+      );
+      watcher.onDidChange((e) => {
+        workingDir.forEach((file) => {
+          const currentFile = fs.readFileSync(
+            path.join(workingDirPath, file),
+            'utf8'
+          );
+          const afterFile = fs.readFileSync(
+            path.join(workspaceFolder, scenario, 'after', file),
+            'utf8'
+          );
+          assert.strictEqual(currentFile, afterFile);
+        });
+        watcher.dispose();
+        resolve();
+      });
+    });
+
+    await vscode.commands.executeCommand(
+      'RNStylesCleaner.cleanStylesForFolder',
+      vscode.Uri.file(workingDirPath)
+    );
+    await cleanFolderPromise;
   });
 });
 
@@ -508,6 +788,5 @@ function deleteFilesRecursively(dirPath: string) {
         fs.unlinkSync(filePath);
       }
     });
-    fs.rmdirSync(dirPath);
   }
 }
