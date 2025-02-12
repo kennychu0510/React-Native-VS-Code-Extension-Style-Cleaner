@@ -2,7 +2,7 @@
   "name": "RNStylesCleaner",
   "displayName": "RN Styles Cleaner",
   "description": "VS Code Extension for cleaning styles in a React Native project",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "engines": {
     "vscode": "^1.60.0"
   },
@@ -17,6 +17,7 @@
   "activationEvents": [
     "onView:RNStylesCleaner-sidebar"
   ],
+  "keywords": ["React Native", "Style", "Cleaner"],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -55,6 +56,10 @@
       {
         "command": "RNStylesCleaner.cleanStylesForFolder",
         "title": "RN Styles Cleaner: Clean unused styles for folder"
+      },
+      {
+        "command": "RNStylesCleaner.consolidateDuplicateInlineStyles",
+        "title": "RN Styles Cleaner: Consolidate duplicate inline styles" 
       }
     ],
     "menus": {
@@ -87,8 +92,13 @@
           "description": "Highlight color of used style in selection",
           "default": "#FFFF00",
           "order": 3
+        },
+        "RNStylesCleaner.consolidatedStyleName": {
+          "type": "string",
+          "description": "Name of consolidated style",
+          "default": "consolidatedStyle",
+          "order": 4
         }
-       
       }
     }
   },

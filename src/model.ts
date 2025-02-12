@@ -30,4 +30,10 @@ export type ExtensionConfig = {
   highlightColor: string;
   usedStyleColor: string;
   unusedStyleColor: string;
-}
+  consolidatedStyleName: string;
+};
+
+export type InlineStyle = {
+  usage: string[];
+  styleObject: Record<string, string | number>;
+};

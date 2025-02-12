@@ -12,7 +12,13 @@
     styleType: 'normal' | 'arrow';
   };
 
+  type InlineStyle = {
+    raw: string;
+    styleObject: Record<string, string | number>;
+  };
+
   let styleList: StyleDetail[] = [];
+  let inlineStyles: InlineStyle[] = [];
   const defaultUsedStyles: string[] = [];
   $: selection = '';
   $: unusedStyles = getUnusedStyles(styleList);
@@ -75,6 +81,10 @@
     tsvscode.postMessage({ type: 'testing', value: '' });
   }
 
+  function consolidateInlineStyles() {
+    tsvscode.postMessage({ type: 'consolidateInlineStyles', value: '' });
+  }
+
   onMount(() => {
     // Listen for messages from the extension
     window.addEventListener('message', (event) => {
@@ -103,6 +113,12 @@
         case 'onReceiveConfig': {
           const result = JSON.parse(message.value);
           config = result;
+          break;
+        }
+        case 'onReceiveInlineStyles': {
+          const result = JSON.parse(message.value);
+          console.log({ result });
+          inlineStyles = result;
           break;
         }
       }
@@ -160,29 +176,17 @@
               <div class="styleKey">
                 {#if style.usage === 0}
                   <!-- svelte-ignore a11y-invalid-attribute -->
-                  <a
-                    href=""
-                    class="unused"
-                    on:click={() => goToLocation(style)}
-                  >
+                  <a href="" class="unused" on:click={() => goToLocation(style)}>
                     {style.name}
                   </a>
                 {:else}
                   <!-- svelte-ignore a11y-invalid-attribute -->
                   {#if stylesUsed.includes(`${item.rootName}.${style.name}`)}
-                    <a
-                      href=""
-                      class="used-style highlighted"
-                      on:click={() => goToLocation(style)}
-                    >
+                    <a href="" class="used-style highlighted" on:click={() => goToLocation(style)}>
                       {style.name}
                     </a>
                   {:else}
-                    <a
-                      href=""
-                      class="used-style"
-                      on:click={() => goToLocation(style)}
-                    >
+                    <a href="" class="used-style" on:click={() => goToLocation(style)}>
                       {style.name}
                     </a>
                   {/if}
@@ -202,9 +206,7 @@
         <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
       {/if}
       {#if selection && stylesUsed.length > 0}
-        <button on:click={copyStylesInSelection}
-          >Copy Styles in Selection</button
-        >
+        <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
       {/if}
     </div>
   {:else}
@@ -212,11 +214,12 @@
   {/if}
   <div class="button-container">
     {#if isValidStyleSelection}
-      <button on:click={extractStyleIntoStylesheet}
-        >Extract into Stylesheet</button
-      >
+      <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
     {/if}
   </div>
+  {#if inlineStyles.length > 0}
+    <button style="margin-top: 10px;" on:click={consolidateInlineStyles}>Consolidate Inline Styles</button>
+  {/if}
 </div>
 
 <style global>

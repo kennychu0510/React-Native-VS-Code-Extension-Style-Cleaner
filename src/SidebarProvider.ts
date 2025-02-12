@@ -1,9 +1,18 @@
-import * as vscode from 'vscode';
-import { checkSelectionIsValidStyle, findFiles, findStylesUsed, formatStyleForPasting, getStyles, isValidObjectKey, parseStyleFromArrayToList } from './helper';
-import * as _ from 'lodash';
-import { ExtensionConfig, ParsedStyle } from './model';
+import * as vscode from "vscode";
+import {
+  checkSelectionIsValidStyle,
+  detectInlineStyles,
+  findFiles,
+  findStylesUsed,
+  formatStyleForPasting,
+  getStyles,
+  isValidObjectKey,
+  parseStyleFromArrayToList,
+} from "./helper";
+import * as _ from "lodash";
+import { ExtensionConfig, InlineStyle, ParsedStyle } from "./model";
 
-const fileExtensions = ['.js', '.jsx', '.tsx'];
+const fileExtensions = [".js", ".jsx", ".tsx"];
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   _view?: vscode.WebviewView;
@@ -12,10 +21,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   selection: string;
   styleList: ReturnType<typeof parseStyleFromArrayToList> = [];
   _config: ExtensionConfig;
+  _duplicatedInlineStyles: InlineStyle[] = [];
 
   constructor(private readonly _extensionUri: vscode.Uri) {
     this._editor = vscode.window.activeTextEditor;
-    this.selection = '';
+    this.selection = "";
     this._config = getExtensionConfig();
   }
 
@@ -34,55 +44,65 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     // Listen for messages from the Sidebar component and execute action
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
-        case 'onFetchStyles': {
+        case "onFetchStyles": {
           this.getStyles();
+          this.detectDuplicatedInlineStyles();
           break;
         }
 
-        case 'onDelete': {
+        case "onDelete": {
           if (!this._editor) {
             return;
           }
           this.handleRemoveUnusedStyles(this._editor, this.styleList);
           break;
         }
-        case 'onClickStyle': {
+        case "onClickStyle": {
           const location = JSON.parse(data.value);
-          const start = new vscode.Position(location.start.line - 1, location.start.column);
+          const start = new vscode.Position(
+            location.start.line - 1,
+            location.start.column
+          );
           const end = new vscode.Position(location.end.line, 0);
           const range = new vscode.Range(start, end);
           const selection = new vscode.Selection(range.start, range.end);
           //@ts-ignore
           this._editor?.selection = selection;
-          this._editor?.revealRange(range, vscode.TextEditorRevealType.InCenter);
+          this._editor?.revealRange(
+            range,
+            vscode.TextEditorRevealType.InCenter
+          );
           this._editor?.edit((edit) => {
-            edit.insert(range.start, '');
+            edit.insert(range.start, "");
           });
 
           break;
         }
-        case 'copyStylesFromSelection': {
+        case "copyStylesFromSelection": {
           this.handleCopyStylesFromSelection();
           break;
         }
-        case 'onInfo': {
+        case "onInfo": {
           if (!data.value) {
             return;
           }
           vscode.window.showInformationMessage(data.value);
           break;
         }
-        case 'onError': {
+        case "onError": {
           if (!data.value) {
             return;
           }
           vscode.window.showErrorMessage(data.value);
           break;
         }
-        case 'extractStyleIntoStylesheet':
+        case "extractStyleIntoStylesheet":
           this.handleExtractSelectionIntoStyleSheet();
           break;
-        case 'testing': {
+        case "consolidateInlineStyles":
+          this.consolidateInlineStyles();
+          break;
+        case "testing": {
           break;
         }
       }
@@ -91,7 +111,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   public async handleCleanStylesForFolder(selectedDir: vscode.Uri | undefined) {
     if (!selectedDir) {
-      vscode.window.showErrorMessage('No directory selected');
+      vscode.window.showErrorMessage("No directory selected");
       return;
     }
 
@@ -99,7 +119,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const reactFiles = findFiles(folderPath);
 
     if (reactFiles.length === 0) {
-      vscode.window.showErrorMessage('No related files found');
+      vscode.window.showErrorMessage("No related files found");
       return;
     }
 
@@ -111,34 +131,44 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       const text = doc.getText();
       const stylesRaw = getStyles(text);
       const styleList = parseStyleFromArrayToList(stylesRaw);
-      const stylesDeleted = await this.handleRemoveUnusedStyles(editor, styleList, true);
+      const stylesDeleted = await this.handleRemoveUnusedStyles(
+        editor,
+        styleList,
+        true
+      );
       if (stylesDeleted > 0) {
         cleanedUpFiles++;
       }
       await editor.document.save();
-      vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+      vscode.commands.executeCommand("workbench.action.closeActiveEditor");
     }
-    vscode.window.showInformationMessage(`${cleanedUpFiles} file${cleanedUpFiles > 1 ? 's' : ''} cleaned up!`);
+    vscode.window.showInformationMessage(
+      `${cleanedUpFiles} file${cleanedUpFiles > 1 ? "s" : ""} cleaned up!`
+    );
   }
 
-  private getLocationOfStyleSheetObject(style: ReturnType<typeof parseStyleFromArrayToList>[0]): number {
+  private getLocationOfStyleSheetObject(
+    style: ReturnType<typeof parseStyleFromArrayToList>[0]
+  ): number {
     return style.location.end.line;
   }
 
   public setSelection(selection: string) {
     this.selection = selection;
     this._view?.webview.postMessage({
-      type: 'onReceiveSelection',
+      type: "onReceiveSelection",
       value: JSON.stringify({
         selection: selection,
         isValidStyle: checkSelectionIsValidStyle(selection),
-        stylesUsed: findStylesUsed(this.styleList, selection).map(item => `${item.rootStyleName}.${item.name}`),
+        stylesUsed: findStylesUsed(this.styleList, selection).map(
+          (item) => `${item.rootStyleName}.${item.name}`
+        ),
       }),
     });
   }
 
   public getTextFromSelection() {
-    return this._editor?.document.getText(this._editor.selection) ?? '';
+    return this._editor?.document.getText(this._editor.selection) ?? "";
   }
 
   public getStyles() {
@@ -152,7 +182,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       const styleList = parseStyleFromArrayToList(stylesRaw);
 
       this._view.webview.postMessage({
-        type: 'onReceiveStyles',
+        type: "onReceiveStyles",
         value: JSON.stringify(styleList),
       });
 
@@ -160,38 +190,142 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     } catch (error) {
       console.log(error);
       this._view.webview.postMessage({
-        type: 'onReceiveStyles',
+        type: "onReceiveStyles",
         value: JSON.stringify([]),
       });
     }
   }
 
+  public detectDuplicatedInlineStyles() {
+    if (!this._editor || !this._view) {
+      return;
+    }
+    const text = this._editor.document.getText();
+    try {
+      const inlineStyles = detectInlineStyles(text);
+      this._duplicatedInlineStyles = inlineStyles;
+      this._view.webview.postMessage({
+        type: "onReceiveInlineStyles",
+        value: JSON.stringify(inlineStyles),
+      });
+    } catch (error) {
+      console.log(error);
+      this._view.webview.postMessage({
+        type: "onReceiveInlineStyles",
+        value: JSON.stringify([]),
+      });
+    }
+  }
+
+  private findStringRange(
+    document: vscode.TextDocument,
+    searchText: string
+  ): vscode.Range[] {
+    const fullText = document.getText();
+    const ranges: vscode.Range[] = [];
+    let startIndex = 0;
+
+    while (startIndex !== -1) {
+      startIndex = fullText.indexOf(searchText, startIndex);
+      if (startIndex !== -1) {
+        const endIndex = startIndex + searchText.length;
+        const startPos = document.positionAt(startIndex);
+        const endPos = document.positionAt(endIndex);
+        ranges.push(new vscode.Range(startPos, endPos));
+        startIndex = endIndex;
+      }
+    }
+
+    return ranges;
+  }
+
+  private async replaceStringRanges(
+    document: vscode.TextDocument,
+    ranges: vscode.Range[],
+    newText: string
+  ) {
+    const edit = new vscode.WorkspaceEdit();
+    for (let range of ranges) {
+      edit.replace(document.uri, range, newText);
+    }
+    await vscode.workspace.applyEdit(edit);
+  }
+
+  public async consolidateInlineStyles() {
+    if (!this._editor || !this._view) {
+      return;
+    }
+    let count = 1;
+    const editor = this._editor;
+    const consolidatedStyleName = this._config.consolidatedStyleName;
+
+    for (let inlineStyle of this._duplicatedInlineStyles) {
+      for (let usage of inlineStyle.usage) {
+        await this.replaceStringRanges(
+          editor.document,
+          this.findStringRange(editor.document, usage),
+          `style={styles.${consolidatedStyleName}_${count}}`
+        );
+      }
+      if (this.styleList.length === 0) {
+        const newStyleSheet = `\nconst styles = StyleSheet.create({\n});`;
+        await this._editor.edit((edit) => {
+          const lastLine = editor.document.lineAt(
+            editor.document.lineCount - 1
+          );
+          const endPosition = lastLine.range.end;
+          edit.insert(endPosition, newStyleSheet);
+        });
+      }
+      this.getStyles();
+      await this.handleExtractStylesIntoStylesheet({
+        editor: editor,
+        rootStyle: this.styleList[0],
+        newStyleName: `${consolidatedStyleName}_${count}`,
+        appendToStyleSheetOnly: true,
+        rootStyleName: this.styleList[0].rootName,
+        styleString: inlineStyle.usage[0],
+      });
+      count++;
+    }
+    this._duplicatedInlineStyles = [];
+    this._view.webview.postMessage({
+      type: "onReceiveInlineStyles",
+      value: JSON.stringify([]),
+    });
+  }
+
   public updateExtensionConfig() {
     this._config = getExtensionConfig();
     this._view?.webview.postMessage({
-      type: 'onReceiveConfig',
+      type: "onReceiveConfig",
       value: JSON.stringify(this._config),
     });
   }
 
-  public async handleExtractSelectionIntoStyleSheet(newStyleName?: string, rootStyleName = '') {
+  public async handleExtractSelectionIntoStyleSheet(
+    newStyleName?: string,
+    rootStyleName = ""
+  ) {
     if (!this._editor) {
-      vscode.window.showErrorMessage('No active text editor found');
+      vscode.window.showErrorMessage("No active text editor found");
       return;
     }
 
     try {
       if (!newStyleName) {
         newStyleName = await vscode.window.showInputBox({
-          title: 'Enter style name',
-          placeHolder: 'styleName',
+          title: "Enter style name",
+          placeHolder: "styleName",
         });
       }
 
-      if (!newStyleName) return;
+      if (!newStyleName) {
+        return;
+      }
 
       if (!isValidObjectKey(newStyleName)) {
-        vscode.window.showErrorMessage('Invalid style name');
+        vscode.window.showErrorMessage("Invalid style name");
         return;
       }
 
@@ -201,13 +335,18 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         const options = this.styleList.map((style) => style.rootName);
         let selectedRootStyleName = rootStyleName;
         if (!selectedRootStyleName) {
-          selectedRootStyleName = (await vscode.window.showQuickPick(options)) ?? '';
+          selectedRootStyleName =
+            (await vscode.window.showQuickPick(options)) ?? "";
         }
-        if (!selectedRootStyleName) return;
+        if (!selectedRootStyleName) {
+          return;
+        }
 
-        const selectedRootStyle = this.styleList.find((style) => style.rootName === selectedRootStyleName);
+        const selectedRootStyle = this.styleList.find(
+          (style) => style.rootName === selectedRootStyleName
+        );
         if (!selectedRootStyle) {
-          vscode.window.showErrorMessage('Invalid style selected');
+          vscode.window.showErrorMessage("Invalid style selected");
           return;
         }
 
@@ -218,7 +357,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           rootStyleName: selectedRootStyleName,
           rootStyle: selectedRootStyle,
         });
-        vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+        vscode.window.showInformationMessage(
+          `Style extracted into ${newStyleName}!`
+        );
       } else if (this.styleList.length === 1) {
         await this.handleExtractStylesIntoStylesheet({
           editor: this._editor!,
@@ -227,7 +368,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           rootStyleName: this.styleList[0].rootName,
           rootStyle: this.styleList[0],
         });
-        vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+        vscode.window.showInformationMessage(
+          `Style extracted into ${newStyleName}!`
+        );
       } else {
         // get line count in editor
         const lineCount = this._editor?.document.lineCount;
@@ -236,40 +379,63 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           const end = new vscode.Position(lineCount, 0);
           const range = new vscode.Range(start, end);
           this._editor?.edit((edit) => {
-            edit.insert(range.start, `\n\nconst styles = StyleSheet.create({\n` + formatStyleForPasting(this.selection, newStyleName!) + `});`);
+            edit.insert(
+              range.start,
+              `\n\nconst styles = StyleSheet.create({\n` +
+                formatStyleForPasting(this.selection, newStyleName!) +
+                `});`
+            );
             edit.delete(selection);
             edit.insert(selection.start, `style={styles.${newStyleName}}`);
-            vscode.window.showInformationMessage(`Style extracted into ${newStyleName}!`);
+            vscode.window.showInformationMessage(
+              `Style extracted into ${newStyleName}!`
+            );
           });
         } else {
-          throw new Error('Could not find location to insert style');
+          throw new Error("Could not find location to insert style");
         }
       }
     } catch (error) {
-      vscode.window.showErrorMessage('Failed to extract style into stylesheet');
+      vscode.window.showErrorMessage("Failed to extract style into stylesheet");
       console.error(error);
     }
   }
 
-  public async handleRemoveUnusedStyles(editor: vscode.TextEditor, styleList: ParsedStyle[], hideDeletedStylesInfoPrompt?: boolean): Promise<number> {
-    const stylesToDelete = _.flatMap(styleList.map((item) => item.styles)).filter((item) => item.usage === 0);
+  public async handleRemoveUnusedStyles(
+    editor: vscode.TextEditor,
+    styleList: ParsedStyle[],
+    hideDeletedStylesInfoPrompt?: boolean
+  ): Promise<number> {
+    const stylesToDelete = _.flatMap(
+      styleList.map((item) => item.styles)
+    ).filter((item) => item.usage === 0);
 
     editor.edit((edit) => {
       for (let styleToDelete of stylesToDelete) {
-        const start = new vscode.Position(styleToDelete.details.item.loc!.start.line! - 1, 0);
-        const end = new vscode.Position(styleToDelete.details.item.loc!.end.line!, 0);
+        const start = new vscode.Position(
+          styleToDelete.details.item.loc!.start.line! - 1,
+          0
+        );
+        const end = new vscode.Position(
+          styleToDelete.details.item.loc!.end.line!,
+          0
+        );
         const location = new vscode.Range(start, end);
         edit.delete(location);
       }
     });
     if (!hideDeletedStylesInfoPrompt) {
-      vscode.window.showInformationMessage(`${stylesToDelete.length} style${stylesToDelete.length > 1 ? 's' : ''} deleted successfully!`);
+      vscode.window.showInformationMessage(
+        `${stylesToDelete.length} style${
+          stylesToDelete.length > 1 ? "s" : ""
+        } deleted successfully!`
+      );
     }
 
     // update UI styles
     this._view?.webview.postMessage({
-      type: 'removeUnusedStylesSuccess',
-      value: '',
+      type: "removeUnusedStylesSuccess",
+      value: "",
     });
 
     return stylesToDelete.length;
@@ -281,57 +447,84 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     newStyleName,
     rootStyle,
     rootStyleName,
+    styleString,
+    appendToStyleSheetOnly = false,
   }: {
     editor: vscode.TextEditor;
-    selection: vscode.Selection;
+    selection?: vscode.Selection | vscode.Range;
     newStyleName: string;
     rootStyleName: string;
     rootStyle: ParsedStyle;
+    styleString?: string;
+    appendToStyleSheetOnly?: boolean;
   }) {
-    const isStyleSheetCreateSingleLine = rootStyle.location.start.line === rootStyle.location.end.line;
-    const lineContent = editor.document.lineAt(rootStyle.location.start.line - 1).text;
-    const endLineForExistingStyle = this.getLocationOfStyleSheetObject(rootStyle);
+    const isStyleSheetCreateSingleLine =
+      rootStyle.location.start.line === rootStyle.location.end.line;
+    const lineContent = editor.document.lineAt(
+      rootStyle.location.start.line - 1
+    ).text;
+    const endLineForExistingStyle =
+      this.getLocationOfStyleSheetObject(rootStyle);
     editor.edit((edit) => {
       if (isStyleSheetCreateSingleLine) {
-        const insertColumn = lineContent.lastIndexOf('})');
-        edit.insert(new vscode.Position(endLineForExistingStyle - 1, insertColumn), '\n' + formatStyleForPasting(this.selection, newStyleName));
+        const insertColumn = lineContent.lastIndexOf("})");
+        edit.insert(
+          new vscode.Position(endLineForExistingStyle - 1, insertColumn),
+          "\n" +
+            formatStyleForPasting(styleString ?? this.selection, newStyleName)
+        );
       } else {
-        edit.insert(new vscode.Position(endLineForExistingStyle - 1, 0), formatStyleForPasting(this.selection, newStyleName));
+        edit.insert(
+          new vscode.Position(endLineForExistingStyle - 1, 0),
+          formatStyleForPasting(styleString ?? this.selection, newStyleName)
+        );
       }
-      edit.delete(selection);
-      edit.insert(selection.start, `style={${rootStyleName}.${newStyleName}}`);
+      if (!appendToStyleSheetOnly && !!selection) {
+        edit.delete(selection);
+        edit.insert(
+          selection.start,
+          `style={${rootStyleName}.${newStyleName}}`
+        );
+      }
     });
   }
 
   public async handleCopyStylesFromSelection() {
     if (!this._editor || !this._editor.selection) {
-      vscode.window.showErrorMessage('No active text editor found');
+      vscode.window.showErrorMessage("No active text editor found");
       return;
     }
 
     const selectedText = this._editor.document.getText(this._editor.selection);
     if (!selectedText) {
-      vscode.window.showErrorMessage('No selection found');
+      vscode.window.showErrorMessage("No selection found");
       return;
     }
 
     const stylesUsed = findStylesUsed(this.styleList, selectedText);
     if (stylesUsed.length === 0) {
-      vscode.window.showErrorMessage('No styles within selection!');
+      vscode.window.showErrorMessage("No styles within selection!");
       return;
     }
     const ranges = [];
     for (let style of stylesUsed) {
-      const start = new vscode.Position(style.loc!.start.line - 1, style.loc!.start.column);
+      const start = new vscode.Position(
+        style.loc!.start.line - 1,
+        style.loc!.start.column
+      );
       const end = new vscode.Position(style.loc!.end.line, 0);
       const range = new vscode.Range(start, end);
       ranges.push(range);
     }
-    this._editor.selections = ranges.map((range) => new vscode.Selection(range.start, range.end));
-    const newSelectedText = this._editor.selections.map((selection) => this._editor?.document.getText(selection)).join('');
+    this._editor.selections = ranges.map(
+      (range) => new vscode.Selection(range.start, range.end)
+    );
+    const newSelectedText = this._editor.selections
+      .map((selection) => this._editor?.document.getText(selection))
+      .join("");
 
     vscode.env.clipboard.writeText(newSelectedText).then(() => {
-      vscode.window.showInformationMessage('Copied styles to clipboard!');
+      vscode.window.showInformationMessage("Copied styles to clipboard!");
     });
   }
 
@@ -378,8 +571,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 }
 
 function getNonce() {
-  let text = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let text = "";
+  const possible =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   for (let i = 0; i < 32; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
@@ -387,10 +581,11 @@ function getNonce() {
 }
 
 export function getExtensionConfig(): ExtensionConfig {
-  const config = vscode.workspace.getConfiguration('RNStylesCleaner');
+  const config = vscode.workspace.getConfiguration("RNStylesCleaner");
   return {
-    highlightColor: config.get('highlightColor') ?? '#FFFF00',
-    unusedStyleColor: config.get('unusedStyleColor') ?? '#eb173a',
-    usedStyleColor: config.get('usedStyleColor') ?? '#4daafc',
-  }
+    highlightColor: config.get("highlightColor") ?? "#FFFF00",
+    unusedStyleColor: config.get("unusedStyleColor") ?? "#eb173a",
+    usedStyleColor: config.get("usedStyleColor") ?? "#4daafc",
+    consolidatedStyleName: config.get("consolidatedStyleName") ?? "consolidatedStyle",
+  };
 }

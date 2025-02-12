@@ -1,10 +1,65 @@
 import { parse } from '@babel/parser';
 import * as _ from 'lodash';
-import { ParsedStyle, StyleDetail, StyleUsed } from './model';
-import * as fs from 'fs'
-import * as path from 'path'
+import { InlineStyle, ParsedStyle, StyleDetail, StyleUsed } from './model';
+import * as fs from 'fs';
+import * as path from 'path';
 
+function parseStringObject(str: string): InlineStyle['styleObject'] {
+  const pairs = str
+    .split(',')
+    .map((pair) => pair.trim())
+    .filter(Boolean);
+  return pairs.reduce((obj, pair) => {
+    const [key, value] = pair.split(':').map((s) => s.trim());
+    // Convert string values (with quotes) or number values
+    const parsedValue = value.includes("'")
+      ? value.replace(/'/g, '') // Remove quotes
+      : Number(value); // Convert to number
 
+    obj[key] = parsedValue;
+    return obj;
+  }, {} as Record<string, string | number>);
+}
+
+function isStyleObjectIdentical(obj1: InlineStyle['styleObject'], obj2: InlineStyle['styleObject']) {
+  const obj1Keys = Object.keys(obj1);
+  const obj2Keys = Object.keys(obj2);
+
+  if (obj1Keys.length !== obj2Keys.length) {
+    return false;
+  }
+
+  return obj1Keys.every((key) => obj1[key] === obj2[key]);
+}
+
+export function detectInlineStyles(text: string): InlineStyle[] {
+  const inlineStyleRegex = /style=\{\{([^{}]*)\}\}/g;
+
+  // match all inline styles
+  const inlineStyles =
+    text.match(inlineStyleRegex)?.map((match) => ({
+      raw: match,
+      styleObject: parseStringObject(match.replace('style=', '').slice(2, -2).trim()),
+    })) ?? [];
+
+  const allInlineStyleObjects: InlineStyle[] = [];
+  for (let i = 0; i < inlineStyles.length; i++) {
+    const styleObj = inlineStyles[i].styleObject;
+    const indexOfExistingStyle = allInlineStyleObjects.findIndex((existingStyle) => isStyleObjectIdentical(existingStyle.styleObject, styleObj));
+    if (indexOfExistingStyle === -1) {
+      allInlineStyleObjects.push({
+        usage: [inlineStyles[i].raw],
+        styleObject: styleObj,
+      });
+    } else {
+      allInlineStyleObjects[indexOfExistingStyle].usage.push(inlineStyles[i].raw);
+    }
+  }
+
+  const duplicatedInlineStyles = allInlineStyleObjects.filter((style) => style.usage.length > 1);
+
+  return duplicatedInlineStyles;
+}
 
 export function getStyles(text: string): StyleDetail[] {
   const ast = parse(text, {
@@ -89,7 +144,6 @@ export function getStyles(text: string): StyleDetail[] {
   return styleList;
 }
 
-
 export function parseStyleFromArrayToList(stylesRaw: StyleDetail[]): ParsedStyle[] {
   const styleList: any = [];
   for (let i = 0; i < stylesRaw.length; i++) {
@@ -166,7 +220,7 @@ export function getStyleContents(style: string): string[] {
   const trimmed = style.replace(/\s/g, '');
   const styleContents = trimmed.slice('style={{'.length, -2);
   const styles = [];
-  let currentKey = ''
+  let currentKey = '';
   let currentValue = '';
   let state: 'key' | 'value' = 'key';
   let nestedLevel = 0;
@@ -180,7 +234,7 @@ export function getStyleContents(style: string): string[] {
     if (char === ':' && !nestedLevel) {
       state = 'value';
       continue;
-    } 
+    }
     if (char === ',' && !nestedLevel) {
       if (currentKey && currentValue) {
         styles.push(`${currentKey}: ${currentValue}`);
@@ -191,7 +245,7 @@ export function getStyleContents(style: string): string[] {
       continue;
     }
     if (char === ':' && nestedLevel) {
-      currentValue += ': '
+      currentValue += ': ';
       continue;
     }
     if (char === ',' && nestedLevel) {
@@ -203,7 +257,7 @@ export function getStyleContents(style: string): string[] {
     }
     if (state === 'value') {
       currentValue += char;
-    } 
+    }
   }
   if (currentKey && currentValue) {
     styles.push(`${currentKey}: ${currentValue}`);
@@ -234,7 +288,7 @@ export function findFiles(directory: string) {
   function traverseDirectory(currentPath: string) {
     const files = fs.readdirSync(currentPath);
 
-    files.forEach(file => {
+    files.forEach((file) => {
       const filePath = path.join(currentPath, file);
       const fileStat = fs.statSync(filePath);
 

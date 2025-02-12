@@ -11,9 +11,11 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       sidebarProvider._editor = editor;
       sidebarProvider.getStyles();
+      sidebarProvider.detectDuplicatedInlineStyles();
     }),
     vscode.workspace.onDidSaveTextDocument((event) => {
       sidebarProvider.getStyles();
+      sidebarProvider.detectDuplicatedInlineStyles();
     }),
     vscode.window.onDidChangeTextEditorSelection((event) => {
       if (event.textEditor && vscode.window.activeTextEditor && event.textEditor.document === vscode.window.activeTextEditor.document) {
@@ -53,6 +55,14 @@ export function activate(context: vscode.ExtensionContext) {
     }),
     vscode.commands.registerCommand('RNStylesCleaner.cleanStylesForFolder', (selectedDir: vscode.Uri | undefined) => {
       sidebarProvider.handleCleanStylesForFolder(selectedDir);
+    }),
+
+    vscode.commands.registerCommand('RNStylesCleaner.consolidateDuplicateInlineStyles', async () => {
+      if (!sidebarProvider._editor) {
+        vscode.window.showErrorMessage('No active text editor');
+        return;
+      }
+      await sidebarProvider.consolidateInlineStyles();
     }),
   ];
   subscriptions.forEach((item) => context.subscriptions.push(item));
