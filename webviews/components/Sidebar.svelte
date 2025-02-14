@@ -93,6 +93,7 @@
         case 'onReceiveStyles': {
           const result = JSON.parse(message.value);
           styleList = result;
+          console.log({styleList});
           break;
         }
         case 'onReceiveSelection': {
@@ -218,7 +219,10 @@
     {/if}
   </div>
   {#if inlineStyles.length > 0}
-    <button style="margin-top: 10px;" on:click={consolidateInlineStyles}>Consolidate Inline Styles</button>
+  <div class="button-container" style="width: 100%;">
+    <button  style="margin-top: 10px;" on:click={consolidateInlineStyles}>Consolidate Inline Styles</button>
+
+  </div>
   {/if}
 </div>
 

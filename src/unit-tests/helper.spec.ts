@@ -489,4 +489,71 @@ describe('detect inline styles', () => {
       },
     });
   });
+
+  it('case 4', () => {
+    const text = `
+    import { StyleSheet, Text, View } from 'react-native';
+    import React from 'react';
+
+    const file1 = () => {
+      return (
+       <View
+        style={{
+          marginHorizontal: 16,
+          flexDirection: 'row',
+          padding: 20,
+        }}
+      >
+        ...
+      </View>
+      <View
+        style={{
+          marginHorizontal: 16, padding: 20,
+          flexDirection: 'row',
+        }}
+      >
+        ...
+      </View>
+      );
+    };
+
+    export default file1;
+
+    const styles = StyleSheet.create({
+    });
+`;
+
+    const inlineStyles = detectInlineStyles(text);
+    const targetStyleObject = {
+      marginHorizontal: 16,
+      padding: 20,
+      flexDirection: 'row',
+    }
+    expect(inlineStyles.find(item => deepCompareObjects(item.styleObject, targetStyleObject))).toBeTruthy()
+  });
 });
+
+function deepCompareObjects(obj1: object, obj2: object): boolean {
+  const keys1 = Object.keys(obj1) as (keyof typeof obj1)[];
+  const keys2 = Object.keys(obj2) as (keyof typeof obj2)[];
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  for (const key of keys1) {
+    const val1 = obj1[key];
+    const val2 = obj2[key];
+
+    if (typeof val1 === 'object' && val1 !== null && typeof val2 === 'object' && val2 !== null) {
+      if (!deepCompareObjects(val1, val2)) {
+        return false;
+      }
+    } else if (val1 !== val2) {
+      return false;
+    }
+  }
+
+  return true;
+   
+}
