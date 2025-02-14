@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.6] - 2025-02-14
+
+- Minor UI changes
+
 ## [1.0.5] - 2025-02-12
 
 - Added feature to consolidate duplicated inline styles
