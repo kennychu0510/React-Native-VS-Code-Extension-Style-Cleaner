@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
 
   type StyleDetail = {
     rootName: string;
@@ -9,7 +9,7 @@
       details: { item: any };
     }[];
     location: any;
-    styleType: 'normal' | 'arrow';
+    styleType: "normal" | "arrow";
   };
 
   type InlineStyle = {
@@ -20,14 +20,14 @@
   let styleList: StyleDetail[] = [];
   let inlineStyles: InlineStyle[] = [];
   const defaultUsedStyles: string[] = [];
-  $: selection = '';
+  $: selection = "";
   $: unusedStyles = getUnusedStyles(styleList);
   $: isValidStyleSelection = false;
   $: stylesUsed = defaultUsedStyles;
   $: config = {
-    highlightColor: '#FFFF00',
-    usedStyleColor: '#4daafc',
-    unusedStyleColor: '#eb173a',
+    highlightColor: "#FFFF00",
+    usedStyleColor: "#4daafc",
+    unusedStyleColor: "#eb173a",
   };
   $: cssVarStyles = `--highlight-color: ${config.highlightColor}; --used-style-color: ${config.usedStyleColor}; --unused-style-color: ${config.unusedStyleColor};`;
   /* Elements */
@@ -51,59 +51,59 @@
 
   function fetchStyles() {
     // send message to the extension asking for the selected text
-    refreshButton.classList.add('rotate');
-    tsvscode.postMessage({ type: 'onFetchStyles', value: '' });
+    refreshButton.classList.add("rotate");
+    tsvscode.postMessage({ type: "onFetchStyles", value: "" });
     setTimeout(() => {
-      refreshButton.classList.remove('rotate');
+      refreshButton.classList.remove("rotate");
     }, 1000);
   }
 
   function deleteUnusedStyles() {
-    tsvscode.postMessage({ type: 'onDelete', value: '' });
+    tsvscode.postMessage({ type: "onDelete", value: "" });
   }
 
   function goToLocation(style: any) {
     tsvscode.postMessage({
-      type: 'onClickStyle',
+      type: "onClickStyle",
       value: JSON.stringify({ ...style.details.item.loc }),
     });
   }
 
   function copyStylesInSelection() {
-    tsvscode.postMessage({ type: 'copyStylesFromSelection', value: '' });
+    tsvscode.postMessage({ type: "copyStylesFromSelection", value: "" });
   }
 
   function extractStyleIntoStylesheet() {
-    tsvscode.postMessage({ type: 'extractStyleIntoStylesheet', value: '' });
+    tsvscode.postMessage({ type: "extractStyleIntoStylesheet", value: "" });
   }
 
   function testing() {
-    tsvscode.postMessage({ type: 'testing', value: '' });
+    tsvscode.postMessage({ type: "testing", value: "" });
   }
 
   function consolidateInlineStyles() {
-    tsvscode.postMessage({ type: 'consolidateInlineStyles', value: '' });
+    tsvscode.postMessage({ type: "consolidateInlineStyles", value: "" });
   }
 
   onMount(() => {
     // Listen for messages from the extension
-    window.addEventListener('message', (event) => {
+    window.addEventListener("message", (event) => {
       const message = event.data;
       switch (message.type) {
-        case 'onReceiveStyles': {
+        case "onReceiveStyles": {
           const result = JSON.parse(message.value);
           styleList = result;
-          console.log({styleList});
+          console.log({ styleList });
           break;
         }
-        case 'onReceiveSelection': {
+        case "onReceiveSelection": {
           const result = JSON.parse(message.value);
           selection = result.selection;
           isValidStyleSelection = result.isValidStyle;
           stylesUsed = result.stylesUsed;
           break;
         }
-        case 'removeUnusedStylesSuccess': {
+        case "removeUnusedStylesSuccess": {
           styleList = styleList.map((rootStyle) => ({
             ...rootStyle,
             styles: rootStyle.styles.filter((style: any) => style.usage !== 0),
@@ -111,12 +111,12 @@
           styleList = styleList.filter((item) => item.styles.length > 0);
           break;
         }
-        case 'onReceiveConfig': {
+        case "onReceiveConfig": {
           const result = JSON.parse(message.value);
           config = result;
           break;
         }
-        case 'onReceiveInlineStyles': {
+        case "onReceiveInlineStyles": {
           const result = JSON.parse(message.value);
           console.log({ result });
           inlineStyles = result;
@@ -129,7 +129,7 @@
   });
 </script>
 
-<div style={cssVarStyles}>
+<div style={cssVarStyles} class="sidebar-container">
   <div class="headerContainer">
     <h1>Styles Cleaner</h1>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -154,13 +154,6 @@
     </div>
   </div>
   {#if styleList.length > 0}
-    <table style="width: 100%;">
-      <tr>
-        <th style="width:80%; text-align: left;">Unused Styles:</th>
-        <th>{unusedStyles.length}</th>
-      </tr>
-    </table>
-
     <table style="width: 100%; margin-bottom:10px">
       <tr>
         <th style="width:80%; text-align: left" class="header-label">Name</th>
@@ -177,17 +170,29 @@
               <div class="styleKey">
                 {#if style.usage === 0}
                   <!-- svelte-ignore a11y-invalid-attribute -->
-                  <a href="" class="unused" on:click={() => goToLocation(style)}>
+                  <a
+                    href=""
+                    class="unused"
+                    on:click={() => goToLocation(style)}
+                  >
                     {style.name}
                   </a>
                 {:else}
                   <!-- svelte-ignore a11y-invalid-attribute -->
                   {#if stylesUsed.includes(`${item.rootName}.${style.name}`)}
-                    <a href="" class="used-style highlighted" on:click={() => goToLocation(style)}>
+                    <a
+                      href=""
+                      class="used-style highlighted"
+                      on:click={() => goToLocation(style)}
+                    >
                       {style.name}
                     </a>
                   {:else}
-                    <a href="" class="used-style" on:click={() => goToLocation(style)}>
+                    <a
+                      href=""
+                      class="used-style"
+                      on:click={() => goToLocation(style)}
+                    >
                       {style.name}
                     </a>
                   {/if}
@@ -207,7 +212,9 @@
         <button on:click={deleteUnusedStyles}>Delete Unused Styles</button>
       {/if}
       {#if selection && stylesUsed.length > 0}
-        <button on:click={copyStylesInSelection}>Copy Styles in Selection</button>
+        <button on:click={copyStylesInSelection}
+          >Copy Styles in Selection</button
+        >
       {/if}
     </div>
   {:else}
@@ -215,18 +222,46 @@
   {/if}
   <div class="button-container">
     {#if isValidStyleSelection}
-      <button on:click={extractStyleIntoStylesheet}>Extract into Stylesheet</button>
+      <button on:click={extractStyleIntoStylesheet}
+        >Extract into Stylesheet</button
+      >
     {/if}
   </div>
   {#if inlineStyles.length > 0}
-  <div class="button-container" style="width: 100%;">
-    <button  style="margin-top: 10px;" on:click={consolidateInlineStyles}>Consolidate Inline Styles</button>
-
-  </div>
+    <div class="button-container" style="width: 100%;">
+      <button style="margin-top: 10px;" on:click={consolidateInlineStyles}
+        >Consolidate Inline Styles</button
+      >
+    </div>
   {/if}
+
+  <table style="width: 100%; margin-top:auto; padding-bottom: 20px;">
+    <tr>
+      <th colspan="2" style="width:80%; text-align: left;">Summary:</th>
+    </tr>
+    <tr>
+      <td style="text-align: left;">Unused Styles:</td>
+      <td style="text-align: center;">{unusedStyles.length}</td>
+    </tr>
+  </table>
 </div>
 
 <style global>
+
+  html {
+    height: 95%;
+    margin: 0;
+  }
+  body {
+    height: 100%;
+    margin: 0;
+  }
+
+  .sidebar-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
   .headerContainer {
     display: flex;
     justify-content: space-between;
@@ -267,10 +302,6 @@
 
   .used-style {
     color: var(--used-style-color);
-  }
-
-  button {
-    max-width: 500px;
   }
 
   .button-container {
